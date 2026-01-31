@@ -7,6 +7,7 @@ import edu.wpi.first.units.measure.MutDistance;
 
 public class RobotState {
     public static RobotState instance = new RobotState();
+    
 
     public MutDistance elevatorPosition;
     public MutAngle armPosition;
@@ -22,5 +23,12 @@ public class RobotState {
 
     public void updateArmPosition(MutAngle angle) {
         armPosition.mut_replace(angle);
+    }
+
+    public double getTurretLimelightTX(double tx) {
+        return tx;
+    }
+    public double getTurretLimelightTY(double ty) {
+        return ty;
     }
 }

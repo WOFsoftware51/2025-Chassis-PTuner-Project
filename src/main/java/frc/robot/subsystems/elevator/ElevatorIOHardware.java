@@ -6,7 +6,7 @@ import edu.wpi.first.units.measure.Voltage;
 public class ElevatorIOHardware implements ElevatorIO{
 
     @Override
-    public void updateImputs(ElevatorIOInputs inputs) {
+    public void updateInputs(ElevatorIOInputs inputs) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'updateImputs'");
     }

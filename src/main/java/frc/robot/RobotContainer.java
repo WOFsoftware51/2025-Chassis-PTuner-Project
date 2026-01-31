@@ -10,16 +10,19 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
+import frc.robot.subsystems.turret.TurretIOHardware;
+import frc.robot.subsystems.turret.TurretIOSim;
+import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.subsystems.elevator.ElevatorIOHardware;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 
@@ -37,16 +40,21 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController driver = new CommandXboxController(0);
-    private final CommandPS5Controller operator = new CommandPS5Controller(1);
+    private final CommandXboxController operator = new CommandXboxController(1);
     private final CommandXboxController joystick = new CommandXboxController(3);
+    private final CommandXboxController test = new CommandXboxController(5);
 
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
-    private final ElevatorSubsystem elevator;
+    // private final ElevatorSubsystem elevator;
+    private final TurretSubsystem turret;
     
 
     public RobotContainer() {
-        this.elevator = new ElevatorSubsystem(
-            Robot.isReal() ? new ElevatorIOHardware() : new ElevatorIOSim()
+        // this.elevator = new ElevatorSubsystem(
+        //     Robot.isReal() ? new ElevatorIOHardware() : new ElevatorIOSim()
+        // );
+        this.turret = new TurretSubsystem(
+            Robot.isReal() ? new TurretIOHardware() : new TurretIOSim()
         );
 
         configureBindings();
@@ -88,18 +96,20 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-
-
+        //Turret Controls
+        test.rightBumper().whileTrue(turret.TurretRunWithVolts(12)); //To the right
+        test.leftBumper().whileTrue(turret.TurretRunWithVolts(-12)); //To the left
+        test.a().whileTrue(turret.TurretToSetpoint(Angle.ofBaseUnits(0, Degree))); //To the left
 
         //Elevator Controls
 
-        operator.triangle() //To Position
-            .whileTrue(
-                elevator.setSetpoint(Inches.of(20))
-            )
-            .onFalse(
-                elevator.setSetpoint(Inches.of(0))
-            );
+        // operator.triangle() //To Position
+        //     .whileTrue(
+        //         elevator.setSetpoint(Inches.of(20))
+        //     )
+        //     .onFalse(
+        //         elevator.setSetpoint(Inches.of(0))
+        //     );
     }
 
     public Command getAutonomousCommand() {

@@ -4,12 +4,10 @@ import static edu.wpi.first.units.Units.*;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
-import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 
 public class ElevatorSubsystem extends SubsystemBase {
     private final ElevatorIO io;
@@ -23,7 +21,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        this.io.updateImputs(inputs);
+        this.io.updateInputs(inputs);
         Logger.processInputs("Elevator", inputs);
 
         this.io.runSetpoint(setpoint);

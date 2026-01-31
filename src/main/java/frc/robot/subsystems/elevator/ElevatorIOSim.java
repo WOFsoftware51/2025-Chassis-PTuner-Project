@@ -51,15 +51,15 @@ public class ElevatorIOSim implements ElevatorIO {
     }
 
     @Override
-    public void updateImputs(ElevatorIOInputs inputs) {
-        sim.update(0.02);
-
+    public void updateInputs(ElevatorIOInputs inputs) {
         inputs.position.mut_replace(sim.getPositionMeters(), Meters);
         inputs.velocity.mut_replace(sim.getVelocityMetersPerSecond(), MetersPerSecond);
-
+        
         inputs.appliedVoltage.mut_replace(appliedVolts);
-
+        
         inputs.supplyCurrent.mut_replace(sim.getCurrentDrawAmps(), Amps);
         inputs.torqueCurrent.mut_replace(sim.getCurrentDrawAmps(), Amps);
+
+        sim.update(0.02);
     }
 }

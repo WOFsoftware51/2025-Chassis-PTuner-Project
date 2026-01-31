@@ -65,4 +65,12 @@ public final class Constants {
       }
     }
   }
+
+  public static final class GearRatios {
+    public static final double kTurretRatio = 149.333; //240:140 (140:15 * 16:1)
+  }
+
+  public static final class OffSets {
+    public static final double kTurretOffset = 0;
+  }
 }
