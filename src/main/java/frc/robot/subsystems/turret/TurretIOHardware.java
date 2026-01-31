@@ -25,24 +25,24 @@ public class TurretIOHardware implements TurretIO {
 
 
     public TurretIOHardware() {
-        configs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        configs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        configs.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+        configs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
         configs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = forwardLimit;
         configs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = reverseLimit;
         
-        configs.MotionMagic.MotionMagicCruiseVelocity = 20;
-        configs.MotionMagic.MotionMagicAcceleration = 60;
+        configs.MotionMagic.MotionMagicCruiseVelocity = 80;
+        configs.MotionMagic.MotionMagicAcceleration = 1000;
 
         configs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        configs.Slot0.kP = 1;
+        configs.Slot0.kP = 0.1;
         configs.Slot0.kI = 0.0;
         configs.Slot0.kD = 0.0;
-        configs.Slot0.kV = 0.0;
+        configs.Slot0.kV = 0.108;
         configs.Slot0.kA = 0.0;
-        configs.Slot0.kS = 0;
+        configs.Slot0.kS = 0.2;
         
-        // configs.MotorOutput.
+        // configs.Feedback.SensorToMechanismRatio = Constants.GearRatios.kTurretRatio;
         
         motor.getConfigurator().apply(configs);
         

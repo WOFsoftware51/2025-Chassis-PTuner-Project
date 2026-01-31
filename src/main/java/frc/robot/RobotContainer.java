@@ -23,6 +23,7 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.turret.TurretIOHardware;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
+import frc.robot.subsystems.vision.Limelight;
 import frc.robot.subsystems.elevator.ElevatorIOHardware;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 
@@ -47,6 +48,7 @@ public class RobotContainer {
     public final Swerve drivetrain = TunerConstants.createDrivetrain();
     // private final ElevatorSubsystem elevator;
     private final TurretSubsystem turret;
+    private final Limelight limelightTurret;
     
 
     public RobotContainer() {
@@ -56,6 +58,7 @@ public class RobotContainer {
         this.turret = new TurretSubsystem(
             Robot.isReal() ? new TurretIOHardware() : new TurretIOSim()
         );
+        this.limelightTurret = new Limelight();
 
         configureBindings();
     }
@@ -100,6 +103,8 @@ public class RobotContainer {
         test.rightBumper().whileTrue(turret.TurretRunWithVolts(12)); //To the right
         test.leftBumper().whileTrue(turret.TurretRunWithVolts(-12)); //To the left
         test.a().whileTrue(turret.TurretToSetpoint(Angle.ofBaseUnits(0, Degree))); //To the left
+        turret.setDefaultCommand(turret.TurretAimToHub());
+        // test.y().whileTrue(turret.TurretAimToHub()); //To the left
 
         //Elevator Controls
 
