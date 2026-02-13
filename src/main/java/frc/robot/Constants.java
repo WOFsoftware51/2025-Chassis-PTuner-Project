@@ -7,11 +7,16 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Constants {
-  public static final RobotType robot = RobotType.SIMBOT;
-  public static final boolean tuningMode = false;
+  public static final RobotType robot = Robot.isReal() ? RobotType.ALPHABOT : RobotType.SIMBOT;
+  public static final boolean tuningMode = true;
 
   public static final double loopPeriodSecs = 0.02;
   public static final double loopPeriodWatchdogSecs = 0.2;
@@ -66,11 +71,38 @@ public final class Constants {
     }
   }
 
-  public static final class GearRatios {
-    public static final double kTurretRatio = 149.333; //240:140 (140:15 * 16:1)
+  public static final class VisionConstants {
+    public static final String kChassisLimelight = "chassis-limelight";
+    public static final String kTurretLimelight = "limelight-turret";
   }
 
-  public static final class OffSets {
-    public static final double kTurretOffset = 0;
-  }
+  public static final class TurretConstants {
+    public static final double kTurretGearRatio = 37.33; //2240:15 (140/15 * 4:1)
+    public static final double kForwardLimit = 135.0;
+    public static final double kReverseLimit = -135;
+
+    public static final Translation3d kTurretToLimelightTranslation3d = 
+      new Translation3d(  //TODO
+        Inches.of(0), 
+        Inches.of(0), 
+        Inches.of(0)
+      );
+    public static final Rotation3d kTurretToLimelightRotation3d = 
+      new Rotation3d(  //TODO
+        Degrees.of(0), 
+        Degrees.of(0), 
+        Degrees.of(0)
+      );
+
+    public static final Translation3d kRobotToTurretTranslation3d = 
+      new Translation3d(  //TODO
+        Inches.of(0), 
+        Inches.of(0), 
+        Inches.of(0)
+      );
+
+
+    }
+
+    
 }

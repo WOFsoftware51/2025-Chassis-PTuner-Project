@@ -5,30 +5,39 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.Kinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.RobotState;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.util.LoggedTunableNumber;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -48,6 +57,24 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
+
+    Slot0Configs testConfigs = new Slot0Configs();
+    private boolean testConfigsChanged = false;
+
+    LoggedTunableNumber kP = new LoggedTunableNumber("DrivekP", 0.0);
+    LoggedTunableNumber kI = new LoggedTunableNumber("DrivekI", 0.0);
+    LoggedTunableNumber kD = new LoggedTunableNumber("DrivekD", 0.0);
+    LoggedTunableNumber kS = new LoggedTunableNumber("DrivekS", 0.0);
+    LoggedTunableNumber kV = new LoggedTunableNumber("DrivekV", 0.0);
+    LoggedTunableNumber kA = new LoggedTunableNumber("DrivekA", 0.0);
+
+
+    private double visionTimeStamp;
+
+
+    private RobotState robotState = RobotState.getInstance();
+
+
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -225,12 +252,6 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     }
 
 
-
-
-
-
-
-
     @Override
     public void periodic() {
         /*
@@ -251,7 +272,55 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             });
         }
 
+        visionTimeStamp = Timer.getFPGATimestamp() - RobotState.getInstance().getVisionLatency();
 
+
+        // addVisionMeasurement(RobotState.getInstance().getTurretLimelightPose3d().toPose2d(), visionTimeStamp);
+        
+        if(
+            kP.hasChanged(kP.hashCode()) ||
+            kI.hasChanged(kI.hashCode()) ||
+            kD.hasChanged(kD.hashCode()) ||
+            kV.hasChanged(kV.hashCode()) ||
+            kA.hasChanged(kA.hashCode()) ||
+            kS.hasChanged(kS.hashCode())
+        ) {
+            testConfigsChanged = true;
+        }
+        else {
+            testConfigsChanged = false;
+        }
+
+        Logger.recordOutput("CANCoder 0 pos", TunerConstants.FrontLeft.DriveMotorGains.kV);
+
+        Logger.recordOutput("RobotState/ChassisSpeeds/vxMetersPerSecond", robotState.getChassisSpeeds().vxMetersPerSecond);
+        Logger.recordOutput("RobotState/ChassisSpeeds/vyMetersPerSecond", robotState.getChassisSpeeds().vyMetersPerSecond);
+        Logger.recordOutput("RobotState/ChassisSpeeds/omegaRadiansPerSecond", robotState.getChassisSpeeds().omegaRadiansPerSecond);
+
+
+    }
+
+    public Command setDriveGains() {
+        testConfigs.kP = kP.get();
+        testConfigs.kI = kI.get();
+        testConfigs.kD = kD.get();
+        testConfigs.kV = kV.get();
+        testConfigs.kA = kA.get();
+        testConfigs.kS = kS.get();
+
+        return runOnce(
+            () -> {
+                // for (var modules : this.getModules()) {
+                //     modules.getDriveMotor().getConfigurator().apply((testConfigs));
+                // }
+
+                TunerConstants.FrontLeft.withDriveMotorGains(testConfigs);
+                TunerConstants.FrontRight.withDriveMotorGains(testConfigs);
+                TunerConstants.BackLeft.withDriveMotorGains(testConfigs);
+                TunerConstants.BackRight.withDriveMotorGains(testConfigs);
+                
+            }
+        );
     }
 
     private void startSimThread() {

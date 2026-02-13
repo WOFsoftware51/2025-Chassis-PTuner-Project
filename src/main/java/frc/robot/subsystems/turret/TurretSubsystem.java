@@ -5,89 +5,118 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Volts;
-
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
+import frc.robot.subsystems.vision.VisionTurretSubsystem;
+import frc.robot.util.LoggedTunableNumber;
 
 public class TurretSubsystem extends SubsystemBase {
   private final TurretIO io;
+  private final VisionTurretSubsystem limelight;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
-  private double tx;
-  private double currentDegrees;
-  private double targetDegrees;
-  private double filteredTX;
+  public double tx;
+  public boolean tv;
+  public double currentDegrees;
+  public double targetDegrees;
 
+  private double visionLatency;
+  public double totalLatency;
+  
+  // LinearFilter txFilter = LinearFilter.singlePoleIIR(0.1, 0.2);
+  // private double filteredTX;
   private boolean inWindow = false;
-
   
-  public TurretSubsystem(TurretIO io) {
+  double chassisOmegaDPS;
+
+
+  LoggedTunableNumber mainThreadLatency = new LoggedTunableNumber("mainThreadLatency", 0.025);
+
+  public TurretSubsystem(TurretIO io, VisionTurretSubsystem limelight) {
     this.io = io;
+    this.limelight = limelight;
   }
 
-  double a = 1;
 
-
-  private void run(double volts) {
-    io.runVolts(Volts.of(volts));
+  public void runToSetpoint(Angle degrees) {
+    io.runSetpoint(degrees);
   }
 
-  private void goToSetpoint(double degrees) {
-    io.runSetpoint(Degrees.of(degrees));
+
+  public void run(Voltage volts) {
+    io.runVolts(volts);
   }
 
-  private void stop() {
-    io.stop();
+  public void turretCameraAimToHub() {
+    io.runSetpoint(Degrees.of(targetDegrees));
+  }
+
+
+  public Command resetEncoder() {
+    return runOnce(
+      ()-> io.resetEncoder()
+    );
   }
   
+  
+
   @Override
   public void periodic() {
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight-turret");
-
-    tx = table.getEntry("tx").getDouble(0);
-    currentDegrees = inputs.position.in(Degrees);
-    
-    LinearFilter txFilter = LinearFilter.singlePoleIIR(0.1, 0.2);
-    filteredTX = txFilter.calculate(tx);
-    
-    targetDegrees = currentDegrees - filteredTX;
-    
-
-    Logger.recordOutput("tx", tx);
-    Logger.recordOutput("currentDegrees", currentDegrees);
-    Logger.recordOutput("targetDegrees", targetDegrees);
-    Logger.recordOutput("inWindow", inWindow);
-
-
     this.io.updateInputs(inputs);
-    Logger.processInputs("Turret", inputs);
+    RobotState.getInstance().setRobotToTurret(inputs.position.baseUnitMagnitude());
+    RobotState.getInstance().setVisionLatency(totalLatency);
 
 
-    if(Math.abs(tx)>1.0) {
+    if(Math.abs(limelight.inputs.tx)>0.5) {
+      tx = limelight.inputs.tx;
       inWindow = false;
     }
-    else if(Math.abs(tx)<0.3) {
+    else if(Math.abs(limelight.inputs.tx)<0.3) {
+      tx = 0;
       inWindow = true;
     }
 
 
+    tv = limelight.inputs.tv;
+    chassisOmegaDPS = RadiansPerSecond.of(RobotState.getInstance().getChassisSpeeds().omegaRadiansPerSecond).in(DegreesPerSecond);
+    
+    visionLatency = ((limelight.inputs.tl + limelight.inputs.cl)/1000.0);
+    totalLatency = visionLatency + mainThreadLatency.getAsDouble();
+    
+    currentDegrees = inputs.position.in(Degrees);
+    
+    // filteredTX = txFilter.calculate(tx);
+    
+    targetDegrees = (currentDegrees - tx) + (
+      chassisOmegaDPS * totalLatency);
+    // targetDegrees = currentDegrees - tx;
+    
+    
+    Logger.processInputs("Turret", inputs);
+    Logger.recordOutput("Turret/currentDegrees", currentDegrees);
+    Logger.recordOutput("Turret/targetDegrees", targetDegrees);
+    Logger.recordOutput("Turret/inWindow", inWindow);
+    
+    
   }
+    
+    
+    
 
 
-
-  public Command TurretRunWithVolts(double speedInVolts) {
+  public Command TurretRunWithVolts(Voltage speedInVolts) {
     return run(() ->
-      this.run(speedInVolts)
+      this.io.runVolts(speedInVolts)
     )
     .finallyDo(
-      () -> stop()
+      () -> io.stop()
     );
   }
   
@@ -96,23 +125,10 @@ public class TurretSubsystem extends SubsystemBase {
       () ->io.runSetpoint(positionInDegrees)
     )
     .finallyDo(
-      () -> stop()
+      () -> io.stop()
     );
   }
 
-
-  public Command TurretAimToHub() {
-    return runEnd(
-      () ->io.runSetpoint(Degrees.of(targetDegrees)), 
-      () -> stop()
-    )
-    .until(
-      () -> inWindow
-    );
-    
-    // .finallyDo(
-    //   () -> stop()
-    // );
-  }
   
+
 }

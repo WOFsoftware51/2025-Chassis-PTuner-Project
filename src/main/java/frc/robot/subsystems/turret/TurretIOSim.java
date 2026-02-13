@@ -21,22 +21,22 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
 
-public class TurretIOSim implements TurretIO{
+public class TurretIOSim implements TurretIO {
     private final TalonFX motor = new TalonFX(0);
     private final TalonFXSimState motorSim = motor.getSimState();
     private final DCMotorSim sim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
             DCMotor.getKrakenX60(1), 
             0.01, 
-            Constants.GearRatios.kTurretRatio
+            Constants.TurretConstants.kTurretGearRatio
         ),
         DCMotor.getKrakenX60(1)
     );
 
     private double target = 0;
 
-    private double forwardLimit = Degrees.of(90).in(Rotations)*Constants.GearRatios.kTurretRatio;
-    private double reverseLimit = Degrees.of(-90).in(Rotations)*Constants.GearRatios.kTurretRatio;
+    private double forwardLimit = (Constants.TurretConstants.kForwardLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
+    private double reverseLimit = (Constants.TurretConstants.kReverseLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
     private TalonFXConfiguration configs = new TalonFXConfiguration();
 
     public TurretIOSim() {
@@ -66,8 +66,8 @@ public class TurretIOSim implements TurretIO{
         double turretRotations = sim.getAngularPositionRotations();
         double turretRPM = sim.getAngularVelocityRPM();
         
-        double rotorRotations = turretRotations * Constants.GearRatios.kTurretRatio;
-        double rotorRPS = RPM.of(turretRPM).in(RotationsPerSecond) * Constants.GearRatios.kTurretRatio;
+        double rotorRotations = turretRotations * Constants.TurretConstants.kTurretGearRatio;
+        double rotorRPS = RPM.of(turretRPM).in(RotationsPerSecond) * Constants.TurretConstants.kTurretGearRatio;
         motorSim.setSupplyVoltage(12.0);
         
         motorSim.setRawRotorPosition(rotorRotations);
@@ -99,7 +99,7 @@ public class TurretIOSim implements TurretIO{
 
     @Override
     public void runSetpoint(Angle degrees) {
-        target = (degrees.in(Rotations))*Constants.GearRatios.kTurretRatio;
+        target = (degrees.in(Rotations))*Constants.TurretConstants.kTurretGearRatio;
         MotionMagicVoltage motion = new MotionMagicVoltage(target);
         motor.setControl(motion);
     }
@@ -107,6 +107,13 @@ public class TurretIOSim implements TurretIO{
     @Override
     public void stop() {
         motor.setVoltage(0);
+    }
+
+
+    @Override
+    public void resetEncoder() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'resetEncoder'");
     }
 
     
