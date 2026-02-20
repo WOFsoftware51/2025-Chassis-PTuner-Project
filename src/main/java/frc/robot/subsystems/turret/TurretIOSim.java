@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.MathUtil;
@@ -22,12 +23,12 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
 
 public class TurretIOSim implements TurretIO {
-    private final TalonFX motor = new TalonFX(0);
+    private final TalonFX motor = new TalonFX(Constants.TurretConstants.kMotorID);
     private final TalonFXSimState motorSim = motor.getSimState();
     private final DCMotorSim sim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
             DCMotor.getKrakenX60(1), 
-            0.01, 
+            0.000000001,
             Constants.TurretConstants.kTurretGearRatio
         ),
         DCMotor.getKrakenX60(1)
@@ -39,21 +40,25 @@ public class TurretIOSim implements TurretIO {
     private double reverseLimit = (Constants.TurretConstants.kReverseLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
     private TalonFXConfiguration configs = new TalonFXConfiguration();
 
+    MotionMagicVoltage motion = new MotionMagicVoltage(0);
+
     public TurretIOSim() {
         configs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         configs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         configs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = forwardLimit;
         configs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = reverseLimit;
 
-        configs.MotionMagic.MotionMagicCruiseVelocity = 100;
-        configs.MotionMagic.MotionMagicAcceleration = 250;
+        configs.MotionMagic.MotionMagicCruiseVelocity = 90;
+        configs.MotionMagic.MotionMagicAcceleration = 400;
+
+        configs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         
-        configs.Slot0.kP = 0.0;
+        configs.Slot0.kP = 0.2;
         configs.Slot0.kI = 0.0;
-        configs.Slot0.kD = 0.0;
-        configs.Slot0.kV = 0.0;
+        configs.Slot0.kD = 0.12;
+        configs.Slot0.kS = 0.03;
+        configs.Slot0.kV = 0.105;
         configs.Slot0.kA = 0.0;
-        configs.Slot0.kS = 0.0;
         
         // configs.MotorOutput.
         
@@ -63,6 +68,7 @@ public class TurretIOSim implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
+        sim.update(0.02);
         double turretRotations = sim.getAngularPositionRotations();
         double turretRPM = sim.getAngularVelocityRPM();
         
@@ -88,7 +94,6 @@ public class TurretIOSim implements TurretIO {
         inputs.supplyCurrent.mut_replace(sim.getCurrentDrawAmps(), Amps);
         inputs.torqueCurrent.mut_replace(sim.getCurrentDrawAmps(), Amps);
         
-        sim.update(0.02);
     }
 
     @Override
@@ -100,20 +105,19 @@ public class TurretIOSim implements TurretIO {
     @Override
     public void runSetpoint(Angle degrees) {
         target = (degrees.in(Rotations))*Constants.TurretConstants.kTurretGearRatio;
-        MotionMagicVoltage motion = new MotionMagicVoltage(target);
+        this.motion.Position = target;
         motor.setControl(motion);
     }
 
     @Override
     public void stop() {
-        motor.setVoltage(0);
+        runVolts(Volts.zero());
     }
 
 
     @Override
     public void resetEncoder() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'resetEncoder'");
+        motor.setPosition(0);
     }
 
     

@@ -2,22 +2,14 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import javax.xml.crypto.dsig.Transform;
-
-import org.littletonrobotics.junction.AutoLog;
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
-
-import com.ctre.phoenix6.sim.ChassisReference;
-
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.units.measure.MutAngle;
-import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.measure.Angle;
 
 public class RobotState {
     private static RobotState instance = new RobotState();
@@ -26,33 +18,73 @@ public class RobotState {
         return instance;
     }
     
+    public Pose2d hubTargetBlue = new Pose2d(4.620, 4.040, new Rotation2d());
+    public Pose2d hubTargetRed = new Pose2d(11.915, 4.040, new Rotation2d());
 
+    private Pose2d pose2d = new Pose2d();
+    private Angle turretYaw = Degrees.of(0);
 
     private ChassisSpeeds robotChassisSpeeds = new ChassisSpeeds();
-    private Pose3d pose3d;
-    private Pose3d turretLimelightPose3d;
+    private Pose2d turretLimelightPose2d = new Pose2d();
+    private Pose2d turretLimelightMegaTag2 = new Pose2d();
 
-    private Transform3d robotToTurret = new Transform3d();
-    private Transform3d turretToLimelight;
-    private Transform3d robotToLimelight;
+    private Translation3d robotToTurreTranslation3d = 
+        new Translation3d(
+            Inches.of(0), 
+            Inches.of(0), 
+            Inches.of(8)
+        );  
+    
+    private Transform3d robotToTurret = new Transform3d(
+        robotToTurreTranslation3d,
+        new Rotation3d(
+            0,
+            0,
+            0
+        )
+    );
+
+    private Transform3d turretToLimelight = new Transform3d(
+        new Translation3d(  //TODO
+            Inches.of(0), 
+            Inches.of(0), 
+            Inches.of(0)
+        ),
+        new Rotation3d(  //TODO
+            Degrees.of(0), 
+            Degrees.of(0), 
+            Degrees.of(0)
+        )
+    );
+    
+    private Transform3d robotToLimelight = new Transform3d();
 
     private double visionLatency;
 
     private RobotState() {
-        turretToLimelight = new Transform3d(
-            Constants.TurretConstants.kTurretToLimelightTranslation3d,
-            Constants.TurretConstants.kTurretToLimelightRotation3d
-        );
-
-
+    
     }
 
 
-    public double getTurretLimelightTX(double tx) {
-        return tx;
+    public void setPose2d(Pose2d pose) {
+        this.pose2d = pose;
     }
-    public double getTurretLimelightTY(double ty) {
-        return ty;
+    
+    public Pose2d getPose2d() {
+        return this.pose2d;
+    }    
+
+    /**
+     * Error from the front of the robot to the hub
+     * 
+     * @return Angle in Degrees
+     */
+    public Angle getRobotToHubDegrees() {
+        double yError = hubTargetRed.getY() - getPose2d().getY();
+        double xError = hubTargetRed.getX() - getPose2d().getX();
+        Angle angleRadians = Radians.of(Math.atan2(yError,xError));
+        double angleDegrees = angleRadians.in(Degree);
+        return Degrees.of(angleDegrees);
     }
 
     public ChassisSpeeds setChassisSpeeds(ChassisSpeeds speeds) {
@@ -62,21 +94,27 @@ public class RobotState {
         return robotChassisSpeeds;
     }
 
-    public void setTurretLimelightPose3d(Pose3d pose3d) {
-        this.turretLimelightPose3d = pose3d;
+    public void setTurretLimelightPose2d(Pose2d pose2d) {
+        this.turretLimelightPose2d = pose2d;
     }
-    public Pose3d getTurretLimelightPose3d() {
-        return turretLimelightPose3d;
+    public Pose2d getTurretLimelightPose2d() {
+        return turretLimelightPose2d;
     }
 
+    public void setTurretLimelightMegaTag2(Pose2d pose2d) {
+        this.turretLimelightMegaTag2 = pose2d;
+    }
+    public Pose2d getTurretLimelightMegaTag2() {
+        return turretLimelightMegaTag2;
+    }
 
     public void setRobotToTurret(double turretYawDegrees) {
         robotToTurret = new Transform3d(
-            Constants.TurretConstants.kRobotToTurretTranslation3d,
+            robotToTurreTranslation3d,
             new Rotation3d(  //TODO
                 Degrees.of(0), 
                 Degrees.of(0), 
-                Degrees.of(turretYawDegrees)
+                Degrees.of(-turretYawDegrees)
             )
         );
     }
@@ -89,8 +127,11 @@ public class RobotState {
     }
 
     
-    public Transform3d getRobotToLimelight() {
+    public void setRobotToLimelight() {
         robotToLimelight = getRobotToTurret().plus(getTurretToLimelight());
+    }
+
+    public Transform3d getRobotToLimelight() {
         return robotToLimelight;
     }
 

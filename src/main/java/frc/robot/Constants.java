@@ -71,38 +71,46 @@ public final class Constants {
     }
   }
 
+  public static final String kCANIvoreName = "CANivore";
+
+  public static final class IntakeConstants {
+    public static final int kMotorID = 40;
+  }
+
+  public static final class SpinDexerConstants {
+    public static final int kMotorID = 42;
+  }
+  
+  public static final class FeederConstants {
+    public static final int kMotorID = 44;
+  }
+  
+  public static final class TurretConstants {
+    public static final int kMotorID = 46;
+
+    public static final double kTurretGearRatio = 37.33; //2240:15 (140/15 * 4:1)
+    public static final double kForwardLimit = 135.0;
+    public static final double kReverseLimit = -135;
+        
+  }
+  
+  public static final class PivotConstants {
+    public static final int kMotorID = 48;
+  }
+
+  public static final class ShooterConstants {
+    public static final int kMotorLeft = 50;
+    public static final int kMotorRight = 51;
+  }
+
+  public static final class HangerConstants {
+    public static final double kGearRatio = 381;
+  }
+
   public static final class VisionConstants {
     public static final String kChassisLimelight = "chassis-limelight";
     public static final String kTurretLimelight = "limelight-turret";
   }
 
-  public static final class TurretConstants {
-    public static final double kTurretGearRatio = 37.33; //2240:15 (140/15 * 4:1)
-    public static final double kForwardLimit = 135.0;
-    public static final double kReverseLimit = -135;
 
-    public static final Translation3d kTurretToLimelightTranslation3d = 
-      new Translation3d(  //TODO
-        Inches.of(0), 
-        Inches.of(0), 
-        Inches.of(0)
-      );
-    public static final Rotation3d kTurretToLimelightRotation3d = 
-      new Rotation3d(  //TODO
-        Degrees.of(0), 
-        Degrees.of(0), 
-        Degrees.of(0)
-      );
-
-    public static final Translation3d kRobotToTurretTranslation3d = 
-      new Translation3d(  //TODO
-        Inches.of(0), 
-        Inches.of(0), 
-        Inches.of(0)
-      );
-
-
-    }
-
-    
 }

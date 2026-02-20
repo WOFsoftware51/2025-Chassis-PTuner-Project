@@ -15,6 +15,6 @@ public class VisionChassisSubsystem extends SubsystemBase{
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("Vision/Chassis Limelight", inputs);
+        // Logger.processInputs("Vision/Chassis Limelight", inputs);
     }
 }

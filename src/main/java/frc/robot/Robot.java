@@ -26,30 +26,35 @@ public class Robot extends LoggedRobot {
     private final RobotContainer m_robotContainer;
 
     /* log and replay timestamp and joystick data */
-    // private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
-    //     .withTimestampReplay()
-    //     .withJoystickReplay();
+    private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
+        .withTimestampReplay()
+        .withJoystickReplay();
 
     public Robot() {
         m_robotContainer = new RobotContainer();
 
         Logger.recordMetadata("2025 Chassis PTuner Project", "MyProject"); 
 
-        if (isReal() || Constants.getMode() == Mode.SIM) {
+        if (isReal()) {
+            Logger.addDataReceiver(new WPILOGWriter()); // Save outputs to a new log
             Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         } 
+        else if(Constants.getMode() == Mode.SIM){
+            // Logger.addDataReceiver(new WPILOGWriter()); // Save outputs to a new sim log
+            Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+        }
         else {
             setUseTiming(false); // Run as fast as possible
             String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
             Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
-            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); 
         }
         Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
     }
 
     @Override
     public void robotPeriodic() {
-        // m_timeAndJoystickReplay.update();
+        m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
     }
 

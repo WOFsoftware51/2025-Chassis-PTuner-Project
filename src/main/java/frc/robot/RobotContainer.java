@@ -20,8 +20,12 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.TurretCameraDefaultCommand;
+import frc.robot.commands.TurretCameraPoseDefaultCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.shooter.ShooterIOHardware;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.turret.TurretIOHardware;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
@@ -33,14 +37,14 @@ import frc.robot.subsystems.vision.VisionChassisSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity: 0.8435211984 RPS
+    private double MaxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity: 0.8435211984 RPS
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.FieldCentric poseTuning = new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.Velocity); // Use open-loop control for drive motors
+            .withDriveRequestType(DriveRequestType.Velocity); 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
@@ -51,20 +55,23 @@ public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(3);
     private final CommandXboxController test = new CommandXboxController(5);
 
-    public final Swerve swerve = TunerConstants.createDrivetrain();
-    // private final ElevatorSubsystem elevator;
-    private final TurretSubsystem turret;
-
     private final VisionTurretSubsystem limelightTurret;
     private final VisionChassisSubsystem limelightChassis;
+
+    public final Swerve swerve;
+    public final RobotState robotState = RobotState.getInstance();
+    private final TurretSubsystem turret;
+    private final ShooterSubsystem shooter;
+
     
 
-    LoggedTunableNumber speedLeft = new LoggedTunableNumber("PoseInputs/speedLeft", 5);
-    LoggedTunableNumber speedRight = new LoggedTunableNumber("PoseInputs/speedRight", 5);
+    LoggedTunableNumber speedLeft = new LoggedTunableNumber("Pose/speedLeft", 5);
+    LoggedTunableNumber speedRight = new LoggedTunableNumber("Pose/speedRight", 5);
     
 
     public RobotContainer() {
         this.limelightTurret = new VisionTurretSubsystem(
+            //  new VisionIOHardware(Constants.VisionConstants.kTurretLimelight)
             Robot.isReal() ? new VisionIOHardware(Constants.VisionConstants.kTurretLimelight) : new VisionIOSim()
         );
         
@@ -74,8 +81,15 @@ public class RobotContainer {
 
         this.turret = new TurretSubsystem(
             Robot.isReal() ? new TurretIOHardware() : new TurretIOSim(),
-            limelightTurret
+            limelightTurret, 
+            robotState
         );
+
+        this.shooter = new ShooterSubsystem(
+            Robot.isReal() ? new ShooterIOHardware() : new ShooterIOSim()
+        );
+        
+        this.swerve = TunerConstants.createDrivetrain(limelightTurret);
 
         configureBindings();
     }
@@ -86,8 +100,8 @@ public class RobotContainer {
         swerve.setDefaultCommand(
             // Drivetrain will execute this command periodically
             swerve.applyRequest(() ->
-                drive.withVelocityX(-driver.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-driver.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(driver.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(driver.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-driver.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -110,15 +124,15 @@ public class RobotContainer {
 
         driver.x().whileTrue(
             swerve.applyRequest(() ->
-                drive.withVelocityX(0) // Drive forward with negative Y (forward)
-                    .withVelocityY(speedLeft.get()) // Drive left with negative X (left)
-                    .withRotationalRate(0) // Drive counterclockwise with negative X (left)
+                poseTuning.withVelocityX(0)
+                    .withVelocityY(-speedLeft.get()) 
+                    .withRotationalRate(0)
             )
         );
         driver.b().whileTrue(
             swerve.applyRequest(() ->
                 poseTuning.withVelocityX(0) // Drive forward with negative Y (forward)
-                    .withVelocityY(-speedRight.get()) // Drive left with negative X (left)
+                    .withVelocityY(speedRight.get()) // Drive left with negative X (left)
                     .withRotationalRate(0) // Drive counterclockwise with negative X (left)
             )
         );
@@ -134,26 +148,26 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         driver.start().onTrue(swerve.runOnce(swerve::seedFieldCentric));
+        driver.back().onTrue(swerve.runOnce(() -> swerve.resetPose(new Pose2d())));
         // driver.start().onTrue(drivetrain.runOnce(() -> drivetrain.resetPose(new Pose2d())));
 
         swerve.registerTelemetry(logger::telemeterize);
 
-        //Turret Controls
-        turret.setDefaultCommand(new TurretCameraDefaultCommand(turret));
-        driver.rightBumper().whileTrue(turret.TurretRunWithVolts(Volts.of(12))); //To the right
-        driver.leftBumper().whileTrue(turret.TurretRunWithVolts(Volts.of(-12))); //To the left
-        driver.a().whileTrue(turret.TurretToSetpoint(Angle.ofBaseUnits(0, Degree))); //To the left
-        driver.povUp().whileTrue(turret.resetEncoder()); //To the left
+        /*
+        Turret Controls
+        */
+        turret.setDefaultCommand(new TurretCameraPoseDefaultCommand(turret));
+        driver.rightBumper().whileTrue(turret.TurretRunWithVolts(Volts.of(6))); //To the right
+        driver.leftBumper().whileTrue(turret.TurretRunWithVolts(Volts.of(-6))); //To the left
+        driver.a().whileTrue(turret.TurretToSetpoint(Degrees.of(0))); 
+        driver.povUp().whileTrue(turret.resetEncoder()); 
 
-        //Elevator Controls
+        /*
+        Shooter Controls
+        */
+        new Trigger(() -> shooter.gainsChanged).whileTrue(shooter.updateGainsCommand());
+        test.a().whileTrue(shooter.runRPMCommand());
 
-        // operator.triangle() //To Position
-        //     .whileTrue(
-        //         elevator.setSetpoint(Inches.of(20))
-        //     )
-        //     .onFalse(
-        //         elevator.setSetpoint(Inches.of(0))
-        //     );
     }
 
     public Command getAutonomousCommand() {

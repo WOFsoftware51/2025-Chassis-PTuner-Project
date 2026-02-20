@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.*;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularAcceleration;
@@ -26,9 +28,6 @@ public interface TurretIO {
 
         public MutCurrent supplyCurrent = Amps.mutable(0);
         public MutCurrent torqueCurrent = Amps.mutable(0);
-
-        public double kV = 0;
-
     }
 
     void updateInputs(TurretIOInputs inputs);

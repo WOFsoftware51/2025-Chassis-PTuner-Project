@@ -2,22 +2,31 @@ package frc.robot.subsystems.vision;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Pose2d;
 
 
 public interface VisionIO {
 
     @AutoLog
     class VisionIOInputs {
-        public double tx;
-        public double ty;
-        public boolean tv;
-        public double ta;
+        public double tx = 0;
+        public double ty = 0;
+        public boolean tv = false;
+        public double ta = 0;
 
         public double tl;
         public double cl;
 
-        public Pose3d botpose;
+        // public Pose2d botpose = new Pose2d();
+
+        public double botpose_x = 0.0;
+        public double botpose_y = 0.0;
+        public double botpose_rot = 0.0; // Radians
+
+        public double MegaTag2_x = 0.0;
+        public double MegaTag2_y = 0.0;
+        public double MegaTag2_rot = 0.0; // Radians
+
         
         public double yaw;
         public double roll;

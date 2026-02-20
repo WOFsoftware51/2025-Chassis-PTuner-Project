@@ -4,22 +4,28 @@
 
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.RobotState;
+import frc.robot.subsystems.vision.LimelightHelpers;
 import frc.robot.subsystems.vision.VisionTurretSubsystem;
 import frc.robot.util.LoggedTunableNumber;
 
 public class TurretSubsystem extends SubsystemBase {
   private final TurretIO io;
   private final VisionTurretSubsystem limelight;
+  private RobotState robotState;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
   public double tx;
@@ -27,11 +33,12 @@ public class TurretSubsystem extends SubsystemBase {
   public double currentDegrees;
   public double targetDegrees;
 
+  public double robotHeading;
+  public double degreesToHub;
+
   private double visionLatency;
   public double totalLatency;
   
-  // LinearFilter txFilter = LinearFilter.singlePoleIIR(0.1, 0.2);
-  // private double filteredTX;
   private boolean inWindow = false;
   
   double chassisOmegaDPS;
@@ -39,15 +46,16 @@ public class TurretSubsystem extends SubsystemBase {
 
   LoggedTunableNumber mainThreadLatency = new LoggedTunableNumber("mainThreadLatency", 0.025);
 
-  public TurretSubsystem(TurretIO io, VisionTurretSubsystem limelight) {
+  public TurretSubsystem(TurretIO io, VisionTurretSubsystem limelight, RobotState robotState) {
     this.io = io;
     this.limelight = limelight;
+    this.robotState = robotState;
   }
 
 
-  public void runToSetpoint(Angle degrees) {
-    io.runSetpoint(degrees);
-  }
+  // public void runToSetpoint(Angle degrees) {
+  //   io.runSetpoint(degrees);
+  // }
 
 
   public void run(Voltage volts) {
@@ -70,9 +78,15 @@ public class TurretSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     this.io.updateInputs(inputs);
-    RobotState.getInstance().setRobotToTurret(inputs.position.baseUnitMagnitude());
-    RobotState.getInstance().setVisionLatency(totalLatency);
+    robotState.setRobotToTurret(inputs.position.in(Degrees));
+    robotState.setRobotToLimelight();
+    
+    visionLatency = ((limelight.inputs.tl + limelight.inputs.cl)/1000.0);
+    totalLatency = visionLatency + mainThreadLatency.getAsDouble();
+    robotState.setVisionLatency(visionLatency);
 
+    robotHeading = robotState.getPose2d().getRotation().getDegrees();
+    degreesToHub = robotState.getRobotToHubDegrees().in(Degrees);
 
     if(Math.abs(limelight.inputs.tx)>0.5) {
       tx = limelight.inputs.tx;
@@ -85,24 +99,23 @@ public class TurretSubsystem extends SubsystemBase {
 
 
     tv = limelight.inputs.tv;
-    chassisOmegaDPS = RadiansPerSecond.of(RobotState.getInstance().getChassisSpeeds().omegaRadiansPerSecond).in(DegreesPerSecond);
+    chassisOmegaDPS = RadiansPerSecond.of(robotState.getChassisSpeeds().omegaRadiansPerSecond).in(DegreesPerSecond);
     
-    visionLatency = ((limelight.inputs.tl + limelight.inputs.cl)/1000.0);
-    totalLatency = visionLatency + mainThreadLatency.getAsDouble();
     
-    currentDegrees = inputs.position.in(Degrees);
-    
-    // filteredTX = txFilter.calculate(tx);
-    
-    targetDegrees = (currentDegrees - tx) + (
-      chassisOmegaDPS * totalLatency);
-    // targetDegrees = currentDegrees - tx;
-    
+    currentDegrees = MathUtil.inputModulus(inputs.position.in(Degrees), -180, 180);
+        
+    // targetDegrees = (currentDegrees - tx) + (
+    //   chassisOmegaDPS * totalLatency);
+
+    targetDegrees = MathUtil.inputModulus(robotHeading - degreesToHub, -180, 180) 
+    + (chassisOmegaDPS * totalLatency);
     
     Logger.processInputs("Turret", inputs);
     Logger.recordOutput("Turret/currentDegrees", currentDegrees);
     Logger.recordOutput("Turret/targetDegrees", targetDegrees);
     Logger.recordOutput("Turret/inWindow", inWindow);
+
+    Logger.recordOutput("Turret/HubError", degreesToHub);
     
     
   }
