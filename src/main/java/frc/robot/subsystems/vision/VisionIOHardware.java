@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.DoubleArrayEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.subsystems.vision.LimelightHelpers.IMUData;
 
 public class VisionIOHardware implements VisionIO {
@@ -9,8 +10,6 @@ public class VisionIOHardware implements VisionIO {
     public VisionIOHardware(String limelightName) {
         this.limelight = limelightName;
     }
-
-    Pose2d test = new Pose2d();
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
@@ -22,21 +21,41 @@ public class VisionIOHardware implements VisionIO {
         inputs.tl = LimelightHelpers.getLatency_Pipeline(limelight);
         inputs.cl = LimelightHelpers.getLatency_Capture(limelight);
 
-        if (inputs.tv) {
-            // Pose2d rawPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight).pose;
-            Pose2d rawPose = LimelightHelpers.getBotPose2d_wpiBlue(limelight);
-            Pose2d rawMegaTag2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight).pose;
-            
-            if (Double.isFinite(rawPose.getX()) && Double.isFinite(rawPose.getY()) && Double.isFinite(rawPose.getRotation().getRadians())) {
-                inputs.botpose_x = rawPose.getX();
-                inputs.botpose_y = rawPose.getY();
-                inputs.botpose_rot = rawPose.getRotation().getRadians();
+        inputs.hw =  NetworkTableInstance.getDefault().getTable("limelight").getEntry("hw").getDoubleArray(new double[0]);
 
-                inputs.MegaTag2_x = rawMegaTag2Pose.getX();
-                inputs.MegaTag2_y = rawMegaTag2Pose.getY();
-                inputs.MegaTag2_rot = rawMegaTag2Pose.getRotation().getRadians();
+
+
+        // Pose2d rawPose = LimelightHelpers.getBotPose2d_wpiBlue(limelight);
+        // Pose2d rawMegaTag2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight).pose;
+        LimelightHelpers.PoseEstimate rawPose = LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
+        LimelightHelpers.PoseEstimate rawMegaTag2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight);
+        
+        inputs.mt1TimeStamp = rawPose.timestampSeconds;
+        inputs.mt2TimeStamp = rawMegaTag2Pose.timestampSeconds;
+        
+        if (rawPose.tagCount > 0 || rawMegaTag2Pose.tagCount > 0) {
+            
+            if (
+                Double.isFinite(rawPose.pose.getX()) && 
+                Double.isFinite(rawPose.pose.getY()) && 
+                Double.isFinite(rawPose.pose.getRotation().getRadians())
+            )   {  
+                    inputs.botpose_x = rawPose.pose.getX();
+                    inputs.botpose_y = rawPose.pose.getY();
+                    inputs.botpose_rot = rawPose.pose.getRotation().getRadians();
             } 
-        } 
+        
+            if (
+                Double.isFinite(rawMegaTag2Pose.pose.getX()) && 
+                Double.isFinite(rawMegaTag2Pose.pose.getY()) && 
+                Double.isFinite(rawMegaTag2Pose.pose.getRotation().getRadians())
+            )   {
+                    inputs.MegaTag2_x = rawMegaTag2Pose.pose.getX();
+                    inputs.MegaTag2_y = rawMegaTag2Pose.pose.getY();
+                    inputs.MegaTag2_rot = rawMegaTag2Pose.pose.getRotation().getRadians();
+            }
+
+        }
         
         IMUData imu = LimelightHelpers.getIMUData(limelight);
         inputs.yaw = imu.Yaw;

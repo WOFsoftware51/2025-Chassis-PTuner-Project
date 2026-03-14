@@ -1,4 +1,4 @@
-package frc.robot.subsystems.turret;
+package frc.robot.subsystems.pivot;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -12,10 +12,9 @@ import edu.wpi.first.units.measure.MutCurrent;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 
-
-public interface TurretIO {
+public interface PivotIO {
     @AutoLog
-    class TurretIOInputs {
+    class PivotIOInputs {
         public MutAngle position = Degrees.mutable(0);
         public MutAngle targetPosition = Degrees.mutable(0);
 
@@ -26,11 +25,14 @@ public interface TurretIO {
 
         public MutCurrent supplyCurrent = Amps.mutable(0);
         public MutCurrent torqueCurrent = Amps.mutable(0);
+
+        public MutAngle canCoderPosition = Degrees.mutable(0);
     }
 
-    void updateInputs(TurretIOInputs inputs);
+    void updateInputs(PivotIOInputs inputs);
     void runVolts(Voltage volts);
     void runSetpoint(Angle degrees);
     void resetEncoder();
     void stop();
+
 }

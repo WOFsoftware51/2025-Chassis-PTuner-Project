@@ -1,24 +1,20 @@
-package frc.robot.subsystems.shooter;
+package frc.robot.subsystems.feeder;
 
 import static edu.wpi.first.units.Units.*;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularAcceleration;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutCurrent;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 
-
-public interface ShooterIO {
+public interface FeederIO {
     @AutoLog
-    class ShooterIOInputs {
-        public MutAngularVelocity currentVelocity = RPM.mutable(0);
-        public MutAngularVelocity targetVelocity = RPM.mutable(0);
-        
-        public MutAngularAcceleration currentAcceleration = DegreesPerSecondPerSecond.mutable(0);
+    class FeederIOInputs {
+        public MutAngularVelocity velocity = DegreesPerSecond.mutable(0);
+        public MutAngularAcceleration acceleration = DegreesPerSecondPerSecond.mutable(0);
 
         public MutVoltage appliedVoltage = Volts.mutable(0);
 
@@ -26,9 +22,9 @@ public interface ShooterIO {
         public MutCurrent torqueCurrent = Amps.mutable(0);
 
     }
-    void updateInputs(ShooterIOInputs inputs);
+
+    void updateInputs(FeederIOInputs inputs);
     void runVolts(Voltage volts);
-    void runVelocityRPM(AngularVelocity velocityRPM);
-    void updateGains(double... gains);
     void stop();
+
 }

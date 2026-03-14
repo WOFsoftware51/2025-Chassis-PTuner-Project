@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.RobotState;
 
 public class VisionTurretSubsystem extends SubsystemBase {
@@ -36,7 +37,7 @@ public class VisionTurretSubsystem extends SubsystemBase {
         new Rotation2d(inputs.botpose_rot)
       );
 
-      Logger.recordOutput("Vision/botpose", 
+      Logger.recordOutput("VisionTurret/botpose", 
         new double[] {
           inputs.botpose_x, 
           inputs.botpose_y,
@@ -50,7 +51,7 @@ public class VisionTurretSubsystem extends SubsystemBase {
         new Rotation2d(inputs.MegaTag2_rot)
       );
 
-      Logger.recordOutput("Vision/botposeMegaTag", 
+      Logger.recordOutput("VisionTurret/botposeMegaTag2", 
         new double[] {
           inputs.MegaTag2_x, 
           inputs.MegaTag2_y,
@@ -68,6 +69,7 @@ public class VisionTurretSubsystem extends SubsystemBase {
       RobotState.getInstance().setTurretLimelightPose2d(visionPose);
       RobotState.getInstance().setTurretLimelightMegaTag2(visionMegaTag2);
     }
+    RobotState.getInstance().setLimelightTurretTimeStamp(inputs.mt1TimeStamp, inputs.mt2TimeStamp);
 
     Logger.processInputs("Vision/Turret Limelight", inputs);
   }

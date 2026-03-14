@@ -7,12 +7,13 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
+import java.util.function.Supplier;
 
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public final class Constants {
   public static final RobotType robot = Robot.isReal() ? RobotType.ALPHABOT : RobotType.SIMBOT;
@@ -20,6 +21,20 @@ public final class Constants {
 
   public static final double loopPeriodSecs = 0.02;
   public static final double loopPeriodWatchdogSecs = 0.2;
+
+  public static Alliance getAllianceColor() {
+    Alliance color = Alliance.Blue;
+    
+    if(!DriverStation.getAlliance().isPresent()){
+      color = Alliance.Blue;
+    }
+    else {
+      color = DriverStation.getAlliance().get();
+    }
+
+    return color;
+
+  }
 
   public static Mode getMode() {
     return switch (robot) {
@@ -73,38 +88,96 @@ public final class Constants {
 
   public static final String kCANIvoreName = "CANivore";
 
-  public static final class IntakeConstants {
-    public static final int kMotorID = 40;
+  public static final class PoseConstants {
+    private static final Pose2d kHubTargetBlue = new Pose2d(4.620, 4.040, new Rotation2d());
+    private static final Pose2d kHubTargetRed = new Pose2d(11.915, 4.040, new Rotation2d());
+
+    public static Supplier<Pose2d> kCurrentAllianceHubTarget = 
+      () -> getAllianceColor() == Alliance.Blue ? kHubTargetBlue : kHubTargetRed;
+
+  }
+  
+  public static final class AutoConstants {
+    public static final double kPDriveController = 10.0;
+
+    public static final double kPThetaController = 15.0;
   }
 
-  public static final class SpinDexerConstants {
-    public static final int kMotorID = 42;
+  public static final class DriveConstants {
+    public static final double kMaxSpeedMetersPerSecond = 9.15/1;
+    public static final double kMaxAccelerationMetersPerSecondPerSecond = 9.15*2;
+
+    public static final double kMaxOmegaRadiansPerSecond = 4*1;
+    public static final double kMaxOmegaRadiansPerSecondPerSecond = 4*4;
+  }
+
+  public static final class IntakeConstants {
+    public static final int kMotorID = 40;
+    public static final double kGearRatio = 1.0;
+
+  }
+
+  public static final class IntakePivotConstants {
+    public static final int kMotorID = 41;
+    public static final int kCANcoderID = 1;
+    public static final double kGearRatio = 80.0;
+    public static final double kCANCoderGearRatio = 2.0; //2x slower than givto
+
+    public static final double kCANCoderOffset = 0.429443;
+
+    public static final double kForwardLimit = 0.0;
+    public static final double kReverseLimit = 0.0;
+
+
+  }
+
+
+  public static final class SpindexerConstants {
+    public static final int kMotorFrontID = 42;
+    public static final int kMotorBackID = 43;
+    public static final double kGearRatio = 1.0;
   }
   
   public static final class FeederConstants {
     public static final int kMotorID = 44;
+    public static final double kGearRatio = 1.0;
   }
   
   public static final class TurretConstants {
     public static final int kMotorID = 46;
+    public static final double kGearRatio = 56.66;//37.33; 
 
-    public static final double kTurretGearRatio = 37.33; //2240:15 (140/15 * 4:1)
-    public static final double kForwardLimit = 135.0;
-    public static final double kReverseLimit = -135;
+    // public static final double kForwardLimit = 135.0;
+    // public static final double kReverseLimit = -135;
+    public static final double kForwardLimit = 380.0;
+    public static final double kReverseLimit = -20.0;
         
   }
   
   public static final class PivotConstants {
     public static final int kMotorID = 48;
+    public static final int kCANCoderID = 2;
+    public static final double kGearRatio = 320.0;
+    public static final double kCANCoderGearRatio = 9.0;
+
+    public static final double kCANCoderOffset = -0.146729;
+
+
+    public static final double kForwardLimit = 21;
+    public static final double kReverseLimit = 0;
+
   }
 
   public static final class ShooterConstants {
-    public static final int kMotorLeft = 50;
-    public static final int kMotorRight = 51;
+    public static final int kMotorLeftID = 50;
+    public static final int kMotorRightID = 51;
+    public static final double kGearRatio = 1.0;
   }
 
   public static final class HangerConstants {
-    public static final double kGearRatio = 381;
+    public static final int kMotorLeftID = 52;
+    public static final int kMotorRightID = 53;
+    public static final double kGearRatio = 381.0;
   }
 
   public static final class VisionConstants {

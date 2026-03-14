@@ -1,18 +1,23 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.*;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
 import frc.robot.util.LoggedTunableNumber;
 
 public class ShooterSubsystem extends SubsystemBase {
     private ShooterIO io;
     ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
-    LoggedTunableNumber shooterRPM = new LoggedTunableNumber("Shooter/ShooterRPM", 0.0);
+    private InterpolatingDoubleTreeMap treeMap = new InterpolatingDoubleTreeMap();
+
+    LoggedTunableNumber shooterRPM = new LoggedTunableNumber("Shooter/speed", 3000);
+    
     LoggedTunableNumber kP = new LoggedTunableNumber("Shooter/kP", 0.0);
     LoggedTunableNumber kI = new LoggedTunableNumber("Shooter/kI", 0.0);
     LoggedTunableNumber kD = new LoggedTunableNumber("Shooter/kD", 0.0);
@@ -24,6 +29,20 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public ShooterSubsystem(ShooterIO io) {
         this.io = io;
+
+        treeMap.put(Inches.of(101.90).in(Meters), 2600.0);
+        treeMap.put(Inches.of(144.50).in(Meters), 2750.0);
+        treeMap.put(Inches.of(182.38).in(Meters), 3120.0);
+        treeMap.put(Inches.of(207.28).in(Meters), 3200.0);
+        treeMap.put(Inches.of(66.000).in(Meters), 2300.0);
+        treeMap.put(Inches.of(77.8).in(Meters), 2380.0);
+        treeMap.put(Inches.of(91.2).in(Meters), 2450.0);
+        treeMap.put(Inches.of(116.0).in(Meters), 2500.0);
+        treeMap.put(Inches.of(134.7).in(Meters), 2600.0);
+        treeMap.put(Inches.of(160.3).in(Meters), 2800.0);
+        treeMap.put(Inches.of(172.3).in(Meters), 3000.0);
+        treeMap.put(Inches.of(213).in(Meters), 3350.0);
+
     }
 
 
@@ -51,6 +70,20 @@ public class ShooterSubsystem extends SubsystemBase {
 
         
         Logger.processInputs("Shooter", inputs);
+
+        Logger.recordOutput("Shooter/TreeMap Angle", treeMap.get(Double.valueOf(RobotState.getInstance().getDistanceFromHubMeters())));
+
+    }
+
+    public Command treeMapRPMCommand() {
+        return run(() ->
+            io.runVelocityRPM(RPM.of(treeMap.get(Double.valueOf(RobotState.getInstance().getDistanceFromHubMeters()))))
+        )
+        .finallyDo(() ->
+            io.stop()
+        );
+        
+
     }
 
     public Command runRPMCommand() {

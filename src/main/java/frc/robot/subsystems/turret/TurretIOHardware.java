@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
@@ -13,19 +14,19 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
 public class TurretIOHardware implements TurretIO {
-  private TalonFX motor = new TalonFX(Constants.TurretConstants.kMotorID, Constants.kCANIvoreName);
+  private TalonFX motor = new TalonFX(Constants.TurretConstants.kMotorID, Constants.kCANIvoreName); //x44
   private TalonFXConfiguration configs = new TalonFXConfiguration();
   
-  private double forwardLimit = (Constants.TurretConstants.kForwardLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
-  private double reverseLimit = (Constants.TurretConstants.kReverseLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
+  private double forwardLimit = (Constants.TurretConstants.kForwardLimit/360.0)*Constants.TurretConstants.kGearRatio;
+  private double reverseLimit = (Constants.TurretConstants.kReverseLimit/360.0)*Constants.TurretConstants.kGearRatio;
   
 
   MotionMagicVoltage motion = new MotionMagicVoltage(0);
 
 
   public TurretIOHardware() {
-    configs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    configs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    configs.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+    configs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
     configs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = forwardLimit;
     configs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = reverseLimit;
 
@@ -43,6 +44,8 @@ public class TurretIOHardware implements TurretIO {
 
     configs.ClosedLoopGeneral.ContinuousWrap = false;
     
+    configs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+
     motor.getConfigurator().apply(configs);
     
   }
@@ -56,7 +59,7 @@ public class TurretIOHardware implements TurretIO {
   
   @Override
   public void runSetpoint(Angle degrees) {
-    double target = (degrees.in(Rotations))*Constants.TurretConstants.kTurretGearRatio;
+    double target = (degrees.in(Rotations))*Constants.TurretConstants.kGearRatio;
     this.motion.Position = target;
     motor.setControl(motion);
   }
@@ -80,9 +83,9 @@ public class TurretIOHardware implements TurretIO {
     double motorRPS = motor.getVelocity().getValueAsDouble();
     double motorRPSPS = motor.getAcceleration().getValueAsDouble();
 
-    double turretDegrees = Rotations.of(motorRotations).in(Degrees)/Constants.TurretConstants.kTurretGearRatio;
-    double velocityDegreesPerSecond = RotationsPerSecond.of(motorRPS).in(DegreesPerSecond)/Constants.TurretConstants.kTurretGearRatio;
-    double velocityDegreesPerSecondPerSecond = RotationsPerSecondPerSecond.of(motorRPSPS).in(DegreesPerSecondPerSecond)/Constants.TurretConstants.kTurretGearRatio;
+    double turretDegrees = Rotations.of(motorRotations).in(Degrees)/Constants.TurretConstants.kGearRatio;
+    double velocityDegreesPerSecond = RotationsPerSecond.of(motorRPS).in(DegreesPerSecond)/Constants.TurretConstants.kGearRatio;
+    double velocityDegreesPerSecondPerSecond = RotationsPerSecondPerSecond.of(motorRPSPS).in(DegreesPerSecondPerSecond)/Constants.TurretConstants.kGearRatio;
 
     inputs.position.mut_replace(turretDegrees, Degrees);
     inputs.velocity.mut_replace(velocityDegreesPerSecond, DegreesPerSecond);

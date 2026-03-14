@@ -1,8 +1,11 @@
 package frc.robot.subsystems.vision;
 
+import java.lang.reflect.Array;
+
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.DoubleArrayEntry;
 
 
 public interface VisionIO {
@@ -17,6 +20,8 @@ public interface VisionIO {
         public double tl;
         public double cl;
 
+        public double[] hw;
+
         // public Pose2d botpose = new Pose2d();
 
         public double botpose_x = 0.0;
@@ -26,6 +31,9 @@ public interface VisionIO {
         public double MegaTag2_x = 0.0;
         public double MegaTag2_y = 0.0;
         public double MegaTag2_rot = 0.0; // Radians
+
+        public double mt1TimeStamp;
+        public double mt2TimeStamp;
 
         
         public double yaw;

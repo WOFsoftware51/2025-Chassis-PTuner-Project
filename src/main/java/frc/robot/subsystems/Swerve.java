@@ -2,40 +2,52 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.SimulatedArena;
+import org.json.simple.parser.ParseException;
 import org.littletonrobotics.junction.Logger;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
+import dev.doglog.DogLog;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.LimelightHelpers;
 import frc.robot.subsystems.vision.VisionTurretSubsystem;
-import frc.robot.subsystems.vision.LimelightHelpers.LimelightResults;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.sim.MapleSimSwerveDrivetrain;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -80,21 +92,15 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     LimelightHelpers.LimelightResults turretLimelightResults = LimelightHelpers.getLatestResults(Constants.VisionConstants.kTurretLimelight);
     private RobotState robotState = RobotState.getInstance();
 
+    private ChassisSpeeds fieldRelativeChassisSpeeds = new ChassisSpeeds();
 
-
-    /* Swerve requests to apply during SysId characterization */
-    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
-    private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+    private Field2d field2d = new Field2d();
 
 
 
-   
     @Override
     public void periodic() {
-        robotState.setPose2d(getState().Pose);
         turretLimelightResults = LimelightHelpers.getLatestResults(Constants.VisionConstants.kTurretLimelight);
-
 
         /*
          * Periodically try to apply the operator perspective.
@@ -104,58 +110,54 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
          * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
          */
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
                 setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
+                    Constants.getAllianceColor() == Alliance.Red
                         ? kRedAlliancePerspectiveRotation
                         : kBlueAlliancePerspectiveRotation
                 );
                 m_hasAppliedOperatorPerspective = true;
-            });
         }
 
+        // visionTimeStamp = robotState.getMegaTag1TimeStamp();
+        visionTimeStamp = robotState.getMegaTag2TimeStamp();
 
-        
-        
         LimelightHelpers.SetRobotOrientation(
             Constants.VisionConstants.kTurretLimelight, 
-            getState().Pose.getRotation().getDegrees(), 
+            MathUtil.inputModulus(getState().Pose.getRotation().getDegrees(), 0, 360),
             RadiansPerSecond.of(getState().Speeds.omegaRadiansPerSecond).in(DegreesPerSecond), 
-            0, 
-            0, 
-            0, 
-            0
-        );
-
-        LimelightHelpers.setCameraPose_RobotSpace(
-            Constants.VisionConstants.kTurretLimelight, 
-            robotState.getRobotToLimelight().getMeasureX().in(Meters), 
-            robotState.getRobotToLimelight().getMeasureY().in(Meters), 
-            robotState.getRobotToLimelight().getMeasureZ().in(Meters), 
             0,
             0, 
+            0, 
             0
         );
 
-        // LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.VisionConstants.kTurretLimelight);
+        // LimelightHelpers.setCameraPose_RobotSpace(
+        //     Constants.VisionConstants.kTurretLimelight, 
+        //     robotState.getRobotToLimelight().getMeasureX().in(Meters), 
+        //     robotState.getRobotToLimelight().getMeasureY().in(Meters), 
+        //     robotState.getRobotToLimelight().getMeasureZ().in(Meters), 
+        //     0,
+        //     Radians.of(robotState.getRobotToLimelight().getRotation().getY()).in(Degrees),
+        //     Radians.of(robotState.getRobotToLimelight().getRotation().getZ()).in(Degrees)    
+        // );
 
 
-        visionTimeStamp = Timer.getFPGATimestamp() - robotState.getVisionLatency();
-        // visionTimeStamp = turretLimelightResults.latency_pipeline;
 
         boolean didItWork = false;
   
-        // if(LimelightHelpers.getTV(Constants.VisionConstants.kTurretLimelight)) {
         if(limelightTurret.inputs.tv) {
             addVisionMeasurement(
-                // mt2.pose, 
-                // mt2.timestampSeconds,
-                robotState.getTurretLimelightMegaTag2(),
+                robotState.getTurretLimelightMegaTag2(), 
+                // robotState.getTurretLimelightPose2d(), 
                 visionTimeStamp,
                 visionSTDMatrix
             );
             didItWork = true;
         }
+        robotState.setPose2d(
+            Robot.isReal() ? getState().Pose : mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose()
+        );
+        
 
 
         if(
@@ -172,16 +174,51 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             testConfigsChanged = false;
         }
 
+        double fieldVx = 
+            getState().Speeds.vxMetersPerSecond * 
+            getState().Pose.getRotation().getCos() - 
+            getState().Speeds.vyMetersPerSecond * 
+            getState().Pose.getRotation().getSin();
+
+        double fieldVy = 
+            getState().Speeds.vxMetersPerSecond * 
+            getState().Pose.getRotation().getSin() + 
+            getState().Speeds.vyMetersPerSecond * 
+            getState().Pose.getRotation().getCos();
+
+        fieldRelativeChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            fieldVx,
+            fieldVy,
+            getState().Speeds.omegaRadiansPerSecond,
+            getState().Pose.getRotation()
+        );
+        
+        robotState.setChassisSpeeds(getState().Speeds, fieldRelativeChassisSpeeds);
+
+
+        field2d.setRobotPose(robotState.getPose2d());
+
+        SmartDashboard.putData(field2d);
 
         Logger.recordOutput("Drive Motor 0 kV", readConfigs.kV);
         
         Logger.recordOutput("RobotState/ChassisSpeeds/vxMetersPerSecond", robotState.getChassisSpeeds().vxMetersPerSecond);
         Logger.recordOutput("RobotState/ChassisSpeeds/vyMetersPerSecond", robotState.getChassisSpeeds().vyMetersPerSecond);
+        Logger.recordOutput("RobotState/ChassisSpeeds/fieldVx", fieldVx);
+        Logger.recordOutput("RobotState/ChassisSpeeds/fieldVy", fieldVy);
         Logger.recordOutput("RobotState/ChassisSpeeds/omegaRadiansPerSecond", robotState.getChassisSpeeds().omegaRadiansPerSecond);
+        Logger.recordOutput("RobotState/DistanceFromHub", robotState.getDistanceFromHubMeters());
 
         Logger.recordOutput("Swerve/didItWork???", didItWork);
 
+        Logger.recordOutput("Pose/testConfigsChanged", testConfigsChanged);
+        
+        if (mapleSimSwerveDrivetrain != null && !Robot.isReal()) {
+            Logger.recordOutput("Drive/SimulationPose", mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose());
+        }
 
+
+        Logger.recordOutput("Limelight Transform", robotState.getRobotToLimelight());
     }
 
     
@@ -201,74 +238,36 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
                     this.getModule(i).getDriveMotor().getConfigurator().refresh(readConfigs);
                 }
 
-                System.out.println("Gaines Updated YAYAYAYAYAYAY");
+                System.out.println("Swerve Gaines Updated!");
             }
         );
     }
 
+    private void buildAutoBuilder() throws IOException, ParseException {
+        AutoBuilder.configure(
+            () -> this.getState().Pose, // Robot pose supplier
+            (resetPose) -> resetPose(resetPose), // Method to reset odometry (will be called if your auto has a starting pose)
+            () -> getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            (speeds, feedforwards) -> applyRequest(() -> new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                    new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                    new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+            ),
+            RobotConfig.fromGUISettings(), // The robot configuration
+            () -> {
+                // Boolean supplier that controls when the path will be mirrored for the red alliance
+                // This will flip the path being followed to the red side of the field.
+                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-
-    /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
-    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> setControl(m_translationCharacterization.withVolts(output)),
-            null,
-            this
-        )
-    );
-
-    /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(7), // Use dynamic voltage of 7 V
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> setControl(m_steerCharacterization.withVolts(volts)),
-            null,
-            this
-        )
-    );
-
-    /*
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
-     * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
-     */
-    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            /* This is in radians per second², but SysId only supports "volts per second" */
-            Volts.of(Math.PI / 6).per(Second),
-            /* This is in radians per second, but SysId only supports "volts" */
-            Volts.of(Math.PI),
-            null, // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdRotation_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> {
-                /* output is actually radians per second, but SysId only supports "volts" */
-                setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-                /* also log the requested output for SysId */
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+                var alliance = DriverStation.getAlliance();
+                if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                }
+                return false;
             },
-            null,
-            this
-        )
-    );
-
-    /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+            this // Reference to this subsystem to set requirements
+        );
+    }
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -285,11 +284,41 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         VisionTurretSubsystem turretLimelight,
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
-        super(drivetrainConstants, modules);
+        super(
+            drivetrainConstants, 
+            Robot.isReal() ? modules : MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules)
+        );
         if (Utils.isSimulation()) {
             startSimThread();
         }
         this.limelightTurret = turretLimelight;
+
+        if(!Robot.isReal()){
+            mapleSimSwerveDrivetrain.mapleSimDrive.setSimulationWorldPose(new Pose2d(2.5, 4, new Rotation2d()));
+        }
+
+        try {
+            buildAutoBuilder();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
+        LimelightHelpers.setCameraPose_RobotSpace(
+            Constants.VisionConstants.kTurretLimelight, 
+            Inches.of(-5.5 + 0).in(Meters), 
+            -Inches.of(7.75 + 6.58).in(Meters), 
+            Inches.of(20.89).in(Meters), 
+            0,
+            15-1,
+            -90
+        );
+
+
     }
 
     /**
@@ -359,43 +388,46 @@ public Swerve(
         return run(() -> this.setControl(request.get()));
     }
 
-    /**
-     * Runs the SysId Quasistatic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Quasistatic test
-     * @return Command to run
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.quasistatic(direction);
-    }
 
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.dynamic(direction);
-    }
+    // private void startSimThread() {
+    //     m_lastSimTime = Utils.getCurrentTimeSeconds();
 
+    //     /* Run simulation at a faster rate so PID gains behave more reasonably */
+    //     m_simNotifier = new Notifier(() -> {
+    //         final double currentTime = Utils.getCurrentTimeSeconds();
+    //         double deltaTime = currentTime - m_lastSimTime;
+    //         m_lastSimTime = currentTime;
 
+    //         /* use the measured time delta, get battery voltage from WPILib */
+    //         updateSimState(deltaTime, RobotController.getBatteryVoltage());
+    //     });
+    //     m_simNotifier.startPeriodic(kSimLoopPeriod);
+    // }
+
+    public MapleSimSwerveDrivetrain mapleSimSwerveDrivetrain = null;
+    
+    @SuppressWarnings("unchecked")
     private void startSimThread() {
-        m_lastSimTime = Utils.getCurrentTimeSeconds();
-
+        mapleSimSwerveDrivetrain = new MapleSimSwerveDrivetrain(
+                Seconds.of(kSimLoopPeriod),
+                Pounds.of(115),
+                Inches.of(30),
+                Inches.of(30),
+                DCMotor.getKrakenX60(1),
+                DCMotor.getKrakenX60(1),
+                1.2,
+                getModuleLocations(),
+                getPigeon2(),
+                getModules(),
+                TunerConstants.FrontLeft,
+                TunerConstants.FrontRight,
+                TunerConstants.BackLeft,
+                TunerConstants.BackRight);
         /* Run simulation at a faster rate so PID gains behave more reasonably */
-        m_simNotifier = new Notifier(() -> {
-            final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - m_lastSimTime;
-            m_lastSimTime = currentTime;
-
-            /* use the measured time delta, get battery voltage from WPILib */
-            updateSimState(deltaTime, RobotController.getBatteryVoltage());
-        });
+        m_simNotifier = new Notifier(mapleSimSwerveDrivetrain::update);
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
+
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate

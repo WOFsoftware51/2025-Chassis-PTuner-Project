@@ -1,12 +1,6 @@
 package frc.robot.subsystems.turret;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -27,17 +21,17 @@ public class TurretIOSim implements TurretIO {
     private final TalonFXSimState motorSim = motor.getSimState();
     private final DCMotorSim sim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
-            DCMotor.getKrakenX60(1), 
-            0.000000001,
-            Constants.TurretConstants.kTurretGearRatio
+            DCMotor.getKrakenX44(1), 
+            0.1,
+            Constants.TurretConstants.kGearRatio
         ),
-        DCMotor.getKrakenX60(1)
+        DCMotor.getKrakenX44(1)
     );
-
+    
     private double target = 0;
 
-    private double forwardLimit = (Constants.TurretConstants.kForwardLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
-    private double reverseLimit = (Constants.TurretConstants.kReverseLimit/360.0)*Constants.TurretConstants.kTurretGearRatio;
+    private double forwardLimit = (Constants.TurretConstants.kForwardLimit/360.0)*Constants.TurretConstants.kGearRatio;
+    private double reverseLimit = (Constants.TurretConstants.kReverseLimit/360.0)*Constants.TurretConstants.kGearRatio;
     private TalonFXConfiguration configs = new TalonFXConfiguration();
 
     MotionMagicVoltage motion = new MotionMagicVoltage(0);
@@ -68,28 +62,35 @@ public class TurretIOSim implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
+        motorSim.setSupplyVoltage(12.0);
+        double volts = motorSim.getMotorVoltage();
+        sim.setInputVoltage(volts);
+
         sim.update(0.02);
         double turretRotations = sim.getAngularPositionRotations();
         double turretRPM = sim.getAngularVelocityRPM();
+        double turretRPMPerMinute = sim.getAngularAcceleration().in(DegreesPerSecondPerSecond)*60;
         
-        double rotorRotations = turretRotations * Constants.TurretConstants.kTurretGearRatio;
-        double rotorRPS = RPM.of(turretRPM).in(RotationsPerSecond) * Constants.TurretConstants.kTurretGearRatio;
-        motorSim.setSupplyVoltage(12.0);
+        double rotorRotations = turretRotations * Constants.TurretConstants.kGearRatio;
+        double rotorRPS = RPM.of(turretRPM).in(RotationsPerSecond) * Constants.TurretConstants.kGearRatio;
+        double rotorRPSPerSecond = (turretRPMPerMinute)/60 * Constants.FeederConstants.kGearRatio;
         
         motorSim.setRawRotorPosition(rotorRotations);
         motorSim.setRotorVelocity(rotorRPS);
+        motorSim.setRotorAcceleration(rotorRPSPerSecond);
         
         double positionDegrees = Rotations.of(turretRotations).in(Degrees);
         double velocityDegreesPerSecond = RPM.of(turretRPM).in(DegreesPerSecond);
+        double velocityDegreesPerSecondPerSecond = turretRPMPerMinute/60;
         
         inputs.position.mut_replace(positionDegrees, Degrees);
         inputs.targetPosition.mut_replace(target, Degrees);
 
         inputs.velocity.mut_replace(velocityDegreesPerSecond, DegreesPerSecond);
+        inputs.acceleration.mut_replace(velocityDegreesPerSecondPerSecond, DegreesPerSecondPerSecond);
+
         
-        double volts = motorSim.getMotorVoltage();
         inputs.appliedVoltage.mut_replace(volts, Volts);
-        sim.setInputVoltage(volts);
         
         inputs.supplyCurrent.mut_replace(sim.getCurrentDrawAmps(), Amps);
         inputs.torqueCurrent.mut_replace(sim.getCurrentDrawAmps(), Amps);
@@ -104,7 +105,7 @@ public class TurretIOSim implements TurretIO {
 
     @Override
     public void runSetpoint(Angle degrees) {
-        target = (degrees.in(Rotations))*Constants.TurretConstants.kTurretGearRatio;
+        target = (degrees.in(Rotations))*Constants.TurretConstants.kGearRatio;
         this.motion.Position = target;
         motor.setControl(motion);
     }

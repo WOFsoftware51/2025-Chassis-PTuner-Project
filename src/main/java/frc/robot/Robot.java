@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnField;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -13,6 +15,9 @@ import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.HootAutoReplay;
 
+import dev.doglog.DogLog;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,15 +40,15 @@ public class Robot extends LoggedRobot {
 
         Logger.recordMetadata("2025 Chassis PTuner Project", "MyProject"); 
 
-        if (isReal()) {
+        if (isReal()) { //REAL
             Logger.addDataReceiver(new WPILOGWriter()); // Save outputs to a new log
             Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         } 
-        else if(Constants.getMode() == Mode.SIM){
+        else if(Constants.getMode() == Mode.SIM){ //SIM
             // Logger.addDataReceiver(new WPILOGWriter()); // Save outputs to a new sim log
             Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
         }
-        else {
+        else { //REPLAY
             setUseTiming(false); // Run as fast as possible
             String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
             Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
@@ -105,6 +110,14 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void testExit() {}
+
+    @Override
+    public void simulationInit() {
+        // SimulatedArena.getInstance().addGamePiece(new RebuiltFuelOnField(new Translation2d(3, 3)));
+
+        SimulatedArena.getInstance().resetFieldForAuto();
+
+    }
 
     @Override
     public void simulationPeriodic() {}
