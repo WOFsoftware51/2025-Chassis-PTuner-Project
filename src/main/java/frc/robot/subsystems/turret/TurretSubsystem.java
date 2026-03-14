@@ -81,7 +81,7 @@ public class TurretSubsystem extends SubsystemBase {
     totalLatency = visionLatency + mainThreadLatency.getAsDouble();
 
     robotHeading = robotState.getPose2d().getRotation().getDegrees();
-    degreesToHub = robotState.getRobotToRedHubDegrees().in(Degrees);
+    degreesToHub = robotState.getRobotToAllianceHubDegrees().in(Degrees);
 
     if(Math.abs(limelight.inputs.tx)>0.5) {
       tx = limelight.inputs.tx;

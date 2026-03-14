@@ -3,30 +3,27 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class RobotState {
     private static RobotState instance = new RobotState();
@@ -135,7 +132,7 @@ public class RobotState {
      * 
      * @return Angle in Degrees
      */
-    public Angle getRobotToRedHubDegrees() {
+    public Angle getRobotToAllianceHubDegrees() {
         double yError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getY() - getPose2d().getY();
         double xError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getX() - getPose2d().getX();
         Angle angleRadians = Radians.of(Math.atan2(yError,xError));
@@ -148,14 +145,19 @@ public class RobotState {
      * 
      * @return Angle in Degrees
      */
-    public Angle getTurretToRedHubDegrees() {
-        Transform2d transform = new Transform2d(robotToTurret.getTranslation().toTranslation2d(), robotToTurret.getRotation().toRotation2d());
-        double yError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getY() - getPose2d().transformBy(transform).getY();
-        double xError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getX() - getPose2d().transformBy(transform).getX();
-        Angle angleRadians = Radians.of(Math.atan2(yError,xError));
-        double angleDegrees = angleRadians.in(Degree);
+    public Angle getTurretToAllianceHubDegrees() {
+        
+        Translation2d transform = new Translation2d(Inches.of(-7.75).in(Meters), Inches.of(5.5).in(Meters));
+        Translation2d rotatedTransform = transform.rotateBy(getPose2d().getRotation());
 
-        Logger.recordOutput("RobotState/getTurretToRedHubDegrees", angleDegrees);
+        double yError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getY() - (getPose2d().getY());
+        double xError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getX() - (getPose2d().getX());
+
+        Angle angleRadians = Radians.of(Math.atan2(yError,xError));
+        double angleDegrees = angleRadians.in(Degree)+90;
+
+        Logger.recordOutput("RobotState/getTurretToAlluanceHubDegrees", angleDegrees);
+        Logger.recordOutput("RobotState/rotatedTransformY", new Pose2d(rotatedTransform.getX(), rotatedTransform.getY(), new Rotation2d()));
 
         return Degrees.of(angleDegrees);
     }

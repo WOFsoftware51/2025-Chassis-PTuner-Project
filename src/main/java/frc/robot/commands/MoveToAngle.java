@@ -106,7 +106,7 @@ public class MoveToAngle extends Command {
     
     double ffScaler =
       MathUtil.clamp(
-        (currentDistance - ffMinRadius) / (ffMaxRadius - ffMinRadius), 0.0, 1.0);
+        Math.abs((currentDistance - ffMinRadius) / (ffMaxRadius - ffMinRadius)), 0.0, 1.0);
 
     Logger.recordOutput("MoveToAngle/ffScaler", ffScaler);
 
@@ -144,7 +144,7 @@ public class MoveToAngle extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return targetLocation.equals(null)
+    return targetLocation == null
       || (thetaController.atGoal());
   }
 }

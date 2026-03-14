@@ -27,6 +27,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public boolean gainsChanged = false;
 
+    public boolean atRPM = false;
+
     public ShooterSubsystem(ShooterIO io) {
         this.io = io;
 
@@ -76,11 +78,30 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public Command treeMapRPMCommand() {
-        return run(() ->
-            io.runVelocityRPM(RPM.of(treeMap.get(Double.valueOf(RobotState.getInstance().getDistanceFromHubMeters()))))
+        return run(() -> 
+            {
+                io.runVelocityRPM(
+                    RPM.of(
+                        treeMap.get(
+                            Double.valueOf(
+                                RobotState.getInstance().getDistanceFromHubMeters()
+                            )
+                        )
+                    )
+                );
+
+
+                if (Math.abs(inputs.targetVelocity.in(RPM) - inputs.currentVelocity.in(RPM)) < 50) {
+                    atRPM = true;
+                }
+
+            }
         )
         .finallyDo(() ->
-            io.stop()
+            {
+                io.stop();
+                atRPM = false;
+            }
         );
         
 

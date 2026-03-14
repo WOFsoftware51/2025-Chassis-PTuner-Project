@@ -100,15 +100,15 @@ public final class Constants {
   public static final class AutoConstants {
     public static final double kPDriveController = 10.0;
 
-    public static final double kPThetaController = 15.0;
+    public static final double kPThetaController = 5.0;
   }
 
   public static final class DriveConstants {
     public static final double kMaxSpeedMetersPerSecond = 9.15/1;
     public static final double kMaxAccelerationMetersPerSecondPerSecond = 9.15*2;
 
-    public static final double kMaxOmegaRadiansPerSecond = 4*1;
-    public static final double kMaxOmegaRadiansPerSecondPerSecond = 4*4;
+    public static final double kMaxOmegaRadiansPerSecond = 6*1;
+    public static final double kMaxOmegaRadiansPerSecondPerSecond = 6*2;
   }
 
   public static final class IntakeConstants {

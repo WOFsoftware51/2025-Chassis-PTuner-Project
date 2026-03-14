@@ -4,20 +4,14 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-
-import dev.doglog.DogLog;
-
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -27,14 +21,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Autons.test;
-import frc.robot.Constants.IntakePivotConstants;
-import frc.robot.commands.GoToPositionCommand;
 import frc.robot.commands.MoveToAngle;
-import frc.robot.commands.PivotPoseDefaultCommand;
-import frc.robot.commands.TurretCameraDefaultCommand;
-import frc.robot.commands.TurretCameraPoseDefaultCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.IntakePivotSubsystem;
 import frc.robot.subsystems.Swerve;
@@ -50,18 +38,17 @@ import frc.robot.subsystems.pivot.PivotSubsystem;
 import frc.robot.subsystems.shooter.ShooterIOHardware;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.spindexer.SpindexerIO;
 import frc.robot.subsystems.spindexer.SpindexerIOHardware;
 import frc.robot.subsystems.spindexer.SpindexerIOSim;
 import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 import frc.robot.subsystems.turret.TurretIOHardware;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
+import frc.robot.subsystems.vision.VisionChassisSubsystem;
 import frc.robot.subsystems.vision.VisionIOHardware;
 import frc.robot.subsystems.vision.VisionIOSim;
 import frc.robot.subsystems.vision.VisionTurretSubsystem;
 import frc.robot.util.LoggedTunableNumber;
-import frc.robot.subsystems.vision.VisionChassisSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -80,6 +67,8 @@ public class RobotContainer {
 
     private final CommandXboxController driver = new CommandXboxController(0);
     private final CommandXboxController operator = new CommandXboxController(1);
+    // private final CommandPS5Controller driver = new CommandPS5Controller(0);
+    // private final CommandPS5Controller operator = new CommandPS5Controller(1);
     private final CommandXboxController joystick = new CommandXboxController(3);
     private final CommandXboxController test = new CommandXboxController(5);
 
@@ -100,6 +89,7 @@ public class RobotContainer {
     private final IntakePivotSubsystem intakePivot;
 
     
+    private boolean operatorRumble = false;
 
     LoggedTunableNumber speedLeft = new LoggedTunableNumber("Pose/speedLeft", 5);
     LoggedTunableNumber speedRight = new LoggedTunableNumber("Pose/speedRight", 5);
@@ -170,20 +160,20 @@ public class RobotContainer {
                         .withRotationalRate(-driver.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
                 )
             );
-            driver.y().whileTrue(
-                swerve.applyRequest(() ->
-                    poseTuning.withVelocityX(speedForward.get())
-                        .withVelocityY(0) 
-                        .withRotationalRate(0)
-                )
-            );  
-            driver.a().whileTrue(
-                swerve.applyRequest(() ->
-                    poseTuning.withVelocityX(-speedBackward.get()) // Drive forward with negative Y (forward)
-                        .withVelocityY(0) // Drive left with negative X (left)
-                        .withRotationalRate(0) // Drive counterclockwise with negative X (left)
-                )
-            );
+            // driver.y().whileTrue(
+            //     swerve.applyRequest(() ->
+            //         poseTuning.withVelocityX(speedForward.get())
+            //             .withVelocityY(0) 
+            //             .withRotationalRate(0)
+            //     )
+            // );  
+            // driver.a().whileTrue(
+            //     swerve.applyRequest(() ->
+            //         poseTuning.withVelocityX(-speedBackward.get()) // Drive forward with negative Y (forward)
+            //             .withVelocityY(0) // Drive left with negative X (left)
+            //             .withRotationalRate(0) // Drive counterclockwise with negative X (left)
+            //     )
+            // );
             // driver.leftTrigger().whileTrue(swerve.applyRequest(() -> brake));
             // driver.y().whileTrue(swerve.applyRequest(() ->
             //     point.withModuleDirection(new Rotation2d(0))
@@ -191,16 +181,15 @@ public class RobotContainer {
             // driver.rightBumper().whileTrue(
             //     new GoToPositionCommand(swerve, robotState, new Pose2d(new Translation2d(2, 4), 
             //     new Rotation2d(Units.degreesToRadians(-90))), 1));
-            driver.leftBumper().whileTrue(
+
+            driver.rightBumper().whileTrue(
+            // driver.R1().whileTrue(
                 new MoveToAngle(
                     swerve, 
                     robotState, 
                     robotState.getPose2d(),
-                    () -> robotState.getRobotToRedHubDegrees(),
+                    () -> robotState.getTurretToAllianceHubDegrees(),
                     1
-                )
-                .finallyDo(() -> 
-                    operator.setRumble(RumbleType.kBothRumble, 0.5)
                 )
             );
 
@@ -214,10 +203,9 @@ public class RobotContainer {
             // );
 
             new Trigger(() -> swerve.testConfigsChanged).onTrue(swerve.setDriveGains());
-
-            // Reset the field-centric heading on left bumper press.
-            // driver.back().onTrue(swerve.runOnce(swerve::seedFieldCentric));
-            driver.povDown().onTrue(swerve.runOnce(() -> swerve.resetPose(new Pose2d())));
+            
+            driver.start().onTrue(swerve.runOnce(() -> swerve.resetPose(new Pose2d())));
+            // driver.touchpad().onTrue(swerve.runOnce(() -> swerve.resetPose(new Pose2d())));
 
         /*
         Turret Controls
@@ -234,7 +222,15 @@ public class RobotContainer {
         */
             new Trigger(() -> shooter.gainsChanged).whileTrue(shooter.updateGainsCommand());
             // operator.rightTrigger().whileTrue(shooter.runRPMCommand());
-            driver.rightTrigger().whileTrue(shooter.treeMapRPMCommand());
+
+            operator.rightTrigger().whileTrue(shooter.treeMapRPMCommand());
+            // operator.R2().whileTrue(shooter.treeMapRPMCommand());
+            
+            new Trigger(() -> shooter.atRPM).onTrue(
+                Commands.runOnce(() ->
+                    operator.setRumble(RumbleType.kBothRumble, 0.5)
+                )
+            );
 
         /*
         Pivot Controls
@@ -244,17 +240,24 @@ public class RobotContainer {
             // operator.y().whileTrue(pivot.runVolts(6));
             // operator.a().whileTrue(pivot.runVolts(-6));
             // operator.rightBumper().whileTrue(pivot.runToPositionCommand(10));
-            operator.povUp().whileTrue(pivot.resetEncoder());
+            // operator.povUp().whileTrue(pivot.resetEncoder());
         
         /*
         Feeder Controls
         */
-            driver.leftTrigger().whileTrue(feeder.runFeederVoltsCommand(12));
+            operator.leftTrigger().whileTrue(feeder.runFeederVoltsCommand(12));
+            // operator.L2().whileTrue(feeder.runFeederVoltsCommand(12));
+
+            // new Trigger(() -> shooter.atRPM).whileTrue(feeder.runFeederVoltsCommand(12));
 
         /*
         Spindexer Controls
         */
-            driver.leftTrigger().whileTrue(spindexer.runSpindexerVoltsCommand(12));
+            operator.leftTrigger().whileTrue(spindexer.runSpindexerVoltsCommand(12));
+            // operator.L2().whileTrue(spindexer.runSpindexerVoltsCommand(12));
+
+            // new Trigger(() -> shooter.atRPM).whileTrue(spindexer.runSpindexerVoltsCommand(12));
+
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -266,14 +269,17 @@ public class RobotContainer {
         /*
         Intake
         */
-            driver.rightBumper().whileTrue(intake.runVolts(12));
+            driver.leftBumper().whileTrue(intake.runVolts(12));
+            // driver.L1().whileTrue(intake.runVolts(12));
         
         /*
         Intake Pivot
         */
             // intakePivot.setDefaultCommand(intakePivot.runVoltsJoystick(() -> operator.getLeftY()));
-            operator.y().whileTrue(intakePivot.runVolts(-3));
-            operator.a().whileTrue(intakePivot.runVolts(3));
+            operator.leftBumper().whileTrue(intakePivot.runVolts(-3));
+            operator.rightBumper().whileTrue(intakePivot.runVolts(3));
+            // operator.L1().whileTrue(intakePivot.runVolts(-3));
+            // operator.L2().whileTrue(intakePivot.runVolts(3));
             // operator.povUp().whileTrue(intakePivot.resetEncoder());
 
 

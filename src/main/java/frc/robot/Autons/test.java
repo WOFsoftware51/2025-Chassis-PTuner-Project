@@ -7,6 +7,7 @@ package frc.robot.Autons;
 import java.io.IOException;
 import java.text.ParseException;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.FileVersionException;
 
@@ -27,19 +28,17 @@ public class test extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     PathPlannerPath left_Center;
 
-    try {
-      left_Center = PathPlannerPath.fromPathFile("Red_Right_Center");
-    }
-    catch (Exception e) {
-      e.printStackTrace();
-    }
-    // catch (IOException e){
-    //   e.printStackTrace();
-    // }
-    
+      try {
+        left_Center = PathPlannerPath.fromPathFile("Red_Right_Center");
 
     addCommands(
-      
+      AutoBuilder.followPath(left_Center)
     );
+
+      } catch (Exception e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }     
+
   }
 }
