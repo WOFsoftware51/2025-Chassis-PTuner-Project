@@ -37,6 +37,12 @@ public class SpindexerIOHardware implements SpindexerIO {
         backConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
     
 
+        configs.CurrentLimits.StatorCurrentLimitEnable = true;
+        configs.CurrentLimits.StatorCurrentLimit = 40;
+        backConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+        backConfigs.CurrentLimits.StatorCurrentLimit = 40;
+
+
         motorFront.getConfigurator().apply(configs);
         motorBack.getConfigurator().apply(backConfigs);
 

@@ -58,6 +58,9 @@ public class IntakePivotSubsystem extends SubsystemBase {
 
     configs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
+    configs.CurrentLimits.StatorCurrentLimitEnable = true;
+    configs.CurrentLimits.StatorCurrentLimit = 40;
+
     motor.getConfigurator().apply(configs);
 
     canCoderConfigs.MagnetSensor.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);

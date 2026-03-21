@@ -41,6 +41,9 @@ public class ShooterIOHardware implements ShooterIO{
         configs.Slot0.kA = 1.0;
         configs.Slot0.kS = 0.0;
 
+        configs.CurrentLimits.StatorCurrentLimitEnable = true;
+        configs.CurrentLimits.StatorCurrentLimit = 180;
+
 
         motorLeft.getConfigurator().apply(configs);
 

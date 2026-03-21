@@ -98,9 +98,9 @@ public final class Constants {
   }
   
   public static final class AutoConstants {
-    public static final double kPDriveController = 10.0;
+    public static final double kPDriveController = 3.0;
 
-    public static final double kPThetaController = 5.0;
+    public static final double kPThetaController = 3.0;
   }
 
   public static final class DriveConstants {

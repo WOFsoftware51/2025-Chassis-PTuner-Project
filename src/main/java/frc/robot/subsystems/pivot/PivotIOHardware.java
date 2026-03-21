@@ -57,6 +57,10 @@ public class PivotIOHardware implements PivotIO{
         
         configs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
 
+        configs.CurrentLimits.StatorCurrentLimitEnable = true;
+        configs.CurrentLimits.StatorCurrentLimit = 20;
+
+
         motor.getConfigurator().apply(configs);
 
 

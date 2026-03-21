@@ -20,6 +20,9 @@ public class IntakeIOHardware implements IntakeIO{
         configs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         configs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
     
+        configs.CurrentLimits.StatorCurrentLimitEnable = true;
+        configs.CurrentLimits.StatorCurrentLimit = 60;
+
         motor.getConfigurator().apply(configs);
     }
 

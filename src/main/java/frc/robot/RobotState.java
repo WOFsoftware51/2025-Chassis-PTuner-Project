@@ -118,6 +118,21 @@ public class RobotState {
         return circlePath;
     }
 
+    public Angle justinTurretAngle() {
+        // Angle distance = Degrees.of(((-0.08 * Meters.of(getDistanceFromHubMeters()).in(Inches)) + 11));// + getPose2d().getRotation().getDegrees());
+
+        Angle angle = Radians.of(Math.atan(5.5 / (Meters.of(getDistanceFromHubMeters()).in(Inches) - 7)));
+    
+        Angle distance = Degrees.of(angle.in(Degrees) + getRobotToAllianceHubDegrees().in(Degrees));
+
+
+        Logger.recordOutput("RobotState/angle", angle.in(Degrees));
+        Logger.recordOutput("RobotState/justinTurretAngle", distance);
+
+        return distance;
+    }
+
+
     public Pose2d getNearestPoseFromHub() {
         List<Pose2d> poses = generateCircle(Constants.PoseConstants.kCurrentAllianceHubTarget.get(), 2.5, 0);
         Pose2d nearestPose = getPose2d().nearest(poses);

@@ -7,11 +7,14 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -21,7 +24,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Autons.test;
+import frc.robot.Autons.S_C_S;
+import frc.robot.Autons.S_C_S_LEFT;
+import frc.robot.Autons.Shoot8;
+import frc.robot.Autons.Test;
 import frc.robot.commands.MoveToAngle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.IntakePivotSubsystem;
@@ -188,7 +194,9 @@ public class RobotContainer {
                     swerve, 
                     robotState, 
                     robotState.getPose2d(),
-                    () -> robotState.getTurretToAllianceHubDegrees(),
+                    () -> robotState.justinTurretAngle(),
+                    // () -> robotState.getRobotToAllianceHubDegrees(),
+                    // () -> robotState.getTurretToAllianceHubDegrees(),
                     1
                 )
             );
@@ -222,6 +230,8 @@ public class RobotContainer {
         */
             new Trigger(() -> shooter.gainsChanged).whileTrue(shooter.updateGainsCommand());
             // operator.rightTrigger().whileTrue(shooter.runRPMCommand());
+            operator.leftTrigger().whileTrue(shooter.runRPMCommand(3500));
+
 
             operator.rightTrigger().whileTrue(shooter.treeMapRPMCommand());
             // operator.R2().whileTrue(shooter.treeMapRPMCommand());
@@ -230,33 +240,39 @@ public class RobotContainer {
                 Commands.runOnce(() ->
                     operator.setRumble(RumbleType.kBothRumble, 0.5)
                 )
+            )
+            .onFalse(
+                Commands.runOnce(() ->
+                    operator.setRumble(RumbleType.kBothRumble, 0.0)
+                )
             );
 
         /*
         Pivot Controls
         */
-            // pivot.setDefaultCommand(new PivotPoseDefaultCommand(pivot));
-            pivot.setDefaultCommand(pivot.treeMapRPMCommand());
+            pivot.setDefaultCommand(pivot.runToPositionCommand(0));
+            // pivot.setDefaultCommand(pivot.treeMapRPMCommand());
             // operator.y().whileTrue(pivot.runVolts(6));
             // operator.a().whileTrue(pivot.runVolts(-6));
-            // operator.rightBumper().whileTrue(pivot.runToPositionCommand(10));
+            operator.rightTrigger().whileTrue(pivot.treeMapRPMCommand());
+            operator.leftTrigger().whileTrue(pivot.runToPositionCommand(15));
             // operator.povUp().whileTrue(pivot.resetEncoder());
         
         /*
         Feeder Controls
         */
-            operator.leftTrigger().whileTrue(feeder.runFeederVoltsCommand(12));
+            // operator.leftTrigger().whileTrue(feeder.runFeederVoltsCommand(12));
             // operator.L2().whileTrue(feeder.runFeederVoltsCommand(12));
 
-            // new Trigger(() -> shooter.atRPM).whileTrue(feeder.runFeederVoltsCommand(12));
+            new Trigger(() -> shooter.atRPM).whileTrue(feeder.runFeederVoltsCommand(12));
 
         /*
         Spindexer Controls
         */
-            operator.leftTrigger().whileTrue(spindexer.runSpindexerVoltsCommand(12));
+            // operator.leftTrigger().whileTrue(spindexer.runSpindexerVoltsCommand(12));
             // operator.L2().whileTrue(spindexer.runSpindexerVoltsCommand(12));
 
-            // new Trigger(() -> shooter.atRPM).whileTrue(spindexer.runSpindexerVoltsCommand(12));
+            new Trigger(() -> shooter.atRPM).whileTrue(spindexer.runSpindexerVoltsCommand(12));
 
 
         // Idle while the robot is disabled. This ensures the configured
@@ -269,15 +285,15 @@ public class RobotContainer {
         /*
         Intake
         */
-            driver.leftBumper().whileTrue(intake.runVolts(12));
+            driver.leftBumper().whileTrue(intake.runVolts(10.56));
             // driver.L1().whileTrue(intake.runVolts(12));
         
         /*
         Intake Pivot
         */
             // intakePivot.setDefaultCommand(intakePivot.runVoltsJoystick(() -> operator.getLeftY()));
-            operator.leftBumper().whileTrue(intakePivot.runVolts(-3));
-            operator.rightBumper().whileTrue(intakePivot.runVolts(3));
+            operator.leftBumper().whileTrue(intakePivot.runVolts(-6));
+            operator.rightBumper().whileTrue(intakePivot.runVolts(6));
             // operator.L1().whileTrue(intakePivot.runVolts(-3));
             // operator.L2().whileTrue(intakePivot.runVolts(3));
             // operator.povUp().whileTrue(intakePivot.resetEncoder());
@@ -289,10 +305,21 @@ public class RobotContainer {
         // joystick.back().and(joystick.x()).whileTrue(swerve.sysIdDynamic(Direction.kReverse));
         // joystick.start().and(joystick.y()).whileTrue(swerve.sysIdQuasistatic(Direction.kForward));
         // joystick.start().and(joystick.x()).whileTrue(swerve.sysIdQuasistatic(Direction.kReverse));
-
+       RobotController.getBrownoutVoltage();
 
         swerve.registerTelemetry(logger::telemeterize);
 
+    NamedCommands.registerCommand("Shoot",shooter.treeMapRPMCommand().withTimeout(2.5));
+    NamedCommands.registerCommand("Pivot",pivot.treeMapRPMCommand().withTimeout(5));
+    NamedCommands.registerCommand("IntakePivot",intakePivot.runVolts(6).withTimeout(0.7));
+    NamedCommands.registerCommand("IntakePivotUp", intakePivot.runVolts(-6).withTimeout(0.53));
+    NamedCommands.registerCommand("Intake", intake.runVolts(10.56));
+     NamedCommands.registerCommand("ShootMore",shooter.treeMapRPMCommand().withTimeout(5));
+    NamedCommands.registerCommand("PivotMore",pivot.treeMapRPMCommand().withTimeout(5));
+
+    // NamedCommands.registerCommand("Spin", spindexer.runSpindexerVoltsCommand(12.0));
+    // NamedCommands.registerCommand("Feed", feeder.runFeederVoltsCommand(12));
+ 
 
 
 
@@ -302,16 +329,25 @@ public class RobotContainer {
         SmartDashboard.putData("Auton", a_chooser);
         a_chooser.setDefaultOption("test", 1);
         a_chooser.addOption("test", 1);
+        a_chooser.addOption("Shoot8", 2);
+        a_chooser.addOption("S_C_S", 3);
+        a_chooser.addOption("S_C_S_LEFT", 4);
+
     }
 
 
     public Command getAutonomousCommand() {
         switch (a_chooser.getSelected()) {
             case 1:
-                return new test(swerve, robotState);
-                
+                return new Test(swerve, robotState, shooter, feeder, spindexer, pivot);
+            case 2:
+                return new Shoot8(spindexer,feeder,shooter);
+            case 3:
+                return new S_C_S(spindexer,feeder,shooter,intake,intakePivot);
+            case 4:
+                return new S_C_S_LEFT(spindexer,feeder,shooter,intake,intakePivot);
             default:
-                return new test(swerve, robotState);
+                 return new Shoot8(spindexer,feeder,shooter);
 
         }
     }  
