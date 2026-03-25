@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.IntakePivotSubsystem;
 import frc.robot.subsystems.feeder.FeederSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -18,29 +19,29 @@ import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class S_C_S extends SequentialCommandGroup {
   /** Creates a new test. */
-  public S_C_S(SpindexerSubsystem spindexerSubsystem,FeederSubsystem feederSubsystem,ShooterSubsystem shooterSubsystem,IntakeSubsystem intakeSubsystem,IntakePivotSubsystem intakePivotSubsystem) {
+  public S_C_S(SpindexerSubsystem spindexerSubsystem,FeederSubsystem feederSubsystem,ShooterSubsystem shooterSubsystem,IntakeSubsystem intakeSubsystem,IntakePivotSubsystem intakePivotSubsystem,PivotSubsystem pivotSubsystem) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    AutoPath BTW_BUMP = AutoPath.PP("BTW_BUMP");
-    AutoPath BUMP_C = AutoPath.PP("BUMP_C");
-    AutoPath C_BUMP = AutoPath.PP("C_BUMP");
+    AutoPath BTW_TR = AutoPath.PP("BTW_TR");
+    AutoPath TR_C = AutoPath.PP("TR_C");
+    AutoPath C_TR_POS = AutoPath.PP("C_TR_POS");
+    AutoPath C_TR = AutoPath.PP("C_TR");
 
     addCommands(
-      BTW_BUMP.resetOdometryToStart(),
       new ParallelCommandGroup(
         NamedCommands.getCommand("Shoot"),
         NamedCommands.getCommand("Pivot")
-       ),
-       new ParallelCommandGroup(
-       BTW_BUMP.follow(),
-       NamedCommands.getCommand("IntakePivot")
-       ),
+       ),    
+    BTW_TR.resetOdometryToStart(),
+    BTW_TR.follow(),  
+    NamedCommands.getCommand("IntakePivot"),
      new ParallelRaceGroup(
-        BUMP_C.follow(),
+        TR_C.follow(),
         NamedCommands.getCommand("Intake")),
         new ParallelCommandGroup( 
-          C_BUMP.follow(),
+          C_TR_POS.follow(),
           NamedCommands.getCommand("IntakePivotUp")),
+    C_TR.follow(),
       new ParallelCommandGroup(
         NamedCommands.getCommand("ShootMore"),
         NamedCommands.getCommand("PivotMore")

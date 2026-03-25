@@ -9,10 +9,17 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.ctre.phoenix6.swerve.SwerveRequest;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.EventMarker;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -20,10 +27,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Autons.BUMP_HP;
+import frc.robot.Autons.OSMOSIS;
 import frc.robot.Autons.S_C_S;
 import frc.robot.Autons.S_C_S_LEFT;
 import frc.robot.Autons.Shoot8;
@@ -55,6 +67,9 @@ import frc.robot.subsystems.vision.VisionIOHardware;
 import frc.robot.subsystems.vision.VisionIOSim;
 import frc.robot.subsystems.vision.VisionTurretSubsystem;
 import frc.robot.util.LoggedTunableNumber;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+// Optional: If you need wait until a specific time in the match
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -105,6 +120,8 @@ public class RobotContainer {
     LoggedTunableNumber pivotAngle = new LoggedTunableNumber("Shooting/Pivot", 0.0);
     LoggedTunableNumber turretAngle = new LoggedTunableNumber("Shooting/Turret", 0.0);
 
+    //  HashMap<String, Command> eventMap = new HashMap<>();
+
     public RobotContainer() {
         this.intakePivot = new IntakePivotSubsystem(
             
@@ -147,9 +164,17 @@ public class RobotContainer {
             Robot.isReal() ? new ShooterIOHardware() : new ShooterIOSim(this.swerve.mapleSimSwerveDrivetrain.mapleSimDrive)
         );
         
+         
+        // eventMap.put("IntakePivot",intakePivot.runVolts(6));
+        // eventMap.put("Shoot", shooter.treeMapRPMCommand());
+        // eventMap.put("Pivot", pivot.treeMapRPMCommand());
+        // eventMap.put("IntakePivotUp", intakePivot.runVolts(-6));
+        // eventMap.put("Intake", intake.runVolts(10.56));
+
 
         configureBindings();
         printAutons();
+       
     }
 
     private void configureBindings() {
@@ -305,22 +330,24 @@ public class RobotContainer {
         // joystick.back().and(joystick.x()).whileTrue(swerve.sysIdDynamic(Direction.kReverse));
         // joystick.start().and(joystick.y()).whileTrue(swerve.sysIdQuasistatic(Direction.kForward));
         // joystick.start().and(joystick.x()).whileTrue(swerve.sysIdQuasistatic(Direction.kReverse));
-       RobotController.getBrownoutVoltage();
+       
 
         swerve.registerTelemetry(logger::telemeterize);
 
+
     NamedCommands.registerCommand("Shoot",shooter.treeMapRPMCommand().withTimeout(2.5));
-    NamedCommands.registerCommand("Pivot",pivot.treeMapRPMCommand().withTimeout(5));
+    NamedCommands.registerCommand("Pivot",pivot.treeMapRPMCommand().withTimeout(2.5));
     NamedCommands.registerCommand("IntakePivot",intakePivot.runVolts(6).withTimeout(0.7));
     NamedCommands.registerCommand("IntakePivotUp", intakePivot.runVolts(-6).withTimeout(0.53));
     NamedCommands.registerCommand("Intake", intake.runVolts(10.56));
-     NamedCommands.registerCommand("ShootMore",shooter.treeMapRPMCommand().withTimeout(5));
+    NamedCommands.registerCommand("ShootMore",shooter.treeMapRPMCommand().withTimeout(5));
     NamedCommands.registerCommand("PivotMore",pivot.treeMapRPMCommand().withTimeout(5));
+    
 
     // NamedCommands.registerCommand("Spin", spindexer.runSpindexerVoltsCommand(12.0));
     // NamedCommands.registerCommand("Feed", feeder.runFeederVoltsCommand(12));
- 
 
+ 
 
 
     }
@@ -332,6 +359,8 @@ public class RobotContainer {
         a_chooser.addOption("Shoot8", 2);
         a_chooser.addOption("S_C_S", 3);
         a_chooser.addOption("S_C_S_LEFT", 4);
+        a_chooser.addOption("BUMP_HP", 5);
+        a_chooser.addOption("OSMOSIS", 6);
 
     }
 
@@ -343,9 +372,13 @@ public class RobotContainer {
             case 2:
                 return new Shoot8(spindexer,feeder,shooter);
             case 3:
-                return new S_C_S(spindexer,feeder,shooter,intake,intakePivot);
+                return new S_C_S(spindexer, feeder, shooter, intake, intakePivot, pivot);
             case 4:
-                return new S_C_S_LEFT(spindexer,feeder,shooter,intake,intakePivot);
+                return new S_C_S_LEFT(spindexer, feeder, shooter, intake, intakePivot, pivot);
+            case 5:
+                return new BUMP_HP(spindexer, feeder, shooter, intake, intakePivot, pivot);
+            case 6:
+                return new PathPlannerAuto("OSMOSIS");
             default:
                  return new Shoot8(spindexer,feeder,shooter);
 

@@ -16,31 +16,31 @@ import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class S_C_S extends SequentialCommandGroup {
+public class C_HP_SHOOTING extends SequentialCommandGroup {
   /** Creates a new test. */
-  public S_C_S(SpindexerSubsystem spindexerSubsystem,FeederSubsystem feederSubsystem,ShooterSubsystem shooterSubsystem,IntakeSubsystem intakeSubsystem,IntakePivotSubsystem intakePivotSubsystem) {
+  public C_HP_SHOOTING(SpindexerSubsystem spindexerSubsystem,FeederSubsystem feederSubsystem,ShooterSubsystem shooterSubsystem,IntakeSubsystem intakeSubsystem,IntakePivotSubsystem intakePivotSubsystem) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    AutoPath BTW_BUMP = AutoPath.PP("BTW_BUMP");
-    AutoPath BUMP_C = AutoPath.PP("BUMP_C");
-    AutoPath C_BUMP = AutoPath.PP("C_BUMP");
+    AutoPath BTW_TR = AutoPath.PP("BTW_TR");
+    AutoPath TR_C = AutoPath.PP("TR_C");
+    AutoPath C_TR_POS = AutoPath.PP("C_TR_POS");
+    AutoPath C_HP = AutoPath.PP("C_HP");
 
     addCommands(
-      BTW_BUMP.resetOdometryToStart(),
       new ParallelCommandGroup(
         NamedCommands.getCommand("Shoot"),
         NamedCommands.getCommand("Pivot")
-       ),
-       new ParallelCommandGroup(
-       BTW_BUMP.follow(),
-       NamedCommands.getCommand("IntakePivot")
-       ),
-     new ParallelRaceGroup(
-        BUMP_C.follow(),
+       ),    
+      BTW_TR.resetOdometryToStart(),
+      BTW_TR.follow(),  
+      NamedCommands.getCommand("IntakePivot"),
+      new ParallelRaceGroup(
+        TR_C.follow(),
         NamedCommands.getCommand("Intake")),
-        new ParallelCommandGroup( 
-          C_BUMP.follow(),
-          NamedCommands.getCommand("IntakePivotUp")),
+      new ParallelCommandGroup( 
+        C_TR_POS.follow(),
+        NamedCommands.getCommand("IntakePivotUp")),
+      C_HP.follow(),
       new ParallelCommandGroup(
         NamedCommands.getCommand("ShootMore"),
         NamedCommands.getCommand("PivotMore")

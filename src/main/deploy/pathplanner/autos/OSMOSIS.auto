@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OS_TR_C"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OS_C_BUMP"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OS_TR_C"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OS_C_BUMP"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
