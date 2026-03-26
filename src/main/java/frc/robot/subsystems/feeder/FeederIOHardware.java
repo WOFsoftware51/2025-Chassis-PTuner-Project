@@ -3,6 +3,7 @@ package frc.robot.subsystems.feeder;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -15,6 +16,7 @@ public class FeederIOHardware implements FeederIO {
     private TalonFX motor = new TalonFX(Constants.FeederConstants.kMotorID, Constants.kCANIvoreName);
 
     private TalonFXConfiguration configs = new TalonFXConfiguration();
+
     
 
     public FeederIOHardware() {
@@ -24,6 +26,9 @@ public class FeederIOHardware implements FeederIO {
         configs.CurrentLimits.StatorCurrentLimitEnable = true;
         configs.CurrentLimits.StatorCurrentLimit = 80;
     
+        configs.CurrentLimits.StatorCurrentLimitEnable = true;
+        configs.CurrentLimits.StatorCurrentLimit = 80;
+
         motor.getConfigurator().apply(configs);
     }
 
@@ -42,7 +47,7 @@ public class FeederIOHardware implements FeederIO {
     @Override
     public void runVolts(Voltage volts) {
         double clampedEffort = MathUtil.clamp(volts.magnitude(), -12, 12);
-        motor.setVoltage(clampedEffort);
+        motor.setControl(new VoltageOut(clampedEffort).withEnableFOC(true));
     }
 
     @Override

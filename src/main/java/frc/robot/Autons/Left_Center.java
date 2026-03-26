@@ -4,10 +4,15 @@
 
 package frc.robot.Autons;
 
-import edu.wpi.first.math.geometry.Rotation2d;
+import static edu.wpi.first.units.Units.*;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.RobotState;
+import frc.robot.commands.MoveToAngle;
 import frc.robot.commands.factories.Superstructure;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.feeder.FeederSubsystem;
@@ -20,9 +25,12 @@ import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Test extends SequentialCommandGroup {
-  /** Creates a new test. */
-  public Test(    
+public class Left_Center extends SequentialCommandGroup {
+  PathPlannerPath LeftTrench_Center;
+  PathPlannerPath Center_Pickup;
+  PathPlannerPath PickUp_LeftTrench;
+  
+  public Left_Center (
     Swerve swerve, 
     RobotState robotState, 
     ShooterSubsystem shooter, 
@@ -32,23 +40,28 @@ public class Test extends SequentialCommandGroup {
     SpindexerSubsystem spindexer, 
     HoodSubsystem hood, 
     Superstructure superstructure
-  ) {
+    ) 
+    {
+      
+    try {
+      LeftTrench_Center = PathPlannerPath.fromPathFile("LeftTrench_Center");
+      Center_Pickup = PathPlannerPath.fromPathFile("Center_Pickup");
+      PickUp_LeftTrench = PathPlannerPath.fromPathFile("PickUp_LeftTrench");
 
-    addCommands(
-      Commands.runOnce(() -> swerve.resetRotation(new Rotation2d())),
-      Commands.waitSeconds(1),
-      // new MoveToAngle(
-      //   swerve, 
-      //   robotState, 
-      //   robotState.getPose2d(),
-      //   () -> robotState.justinTurretAngle(),
-      //   // () -> robotState.getRobotToAllianceHubDegrees(),
-      //   // () -> robotState.getTurretToAllianceHubDegrees(),
-      //   1
-      // ),
-      // superstructure.shootTreeMap()
+      addCommands(
+        AutoBuilder.resetOdom(LeftTrench_Center.getStartingHolonomicPose().get()),
+        AutoBuilder.followPath(LeftTrench_Center),
+        intakePivot.runSetpoint(0).withTimeout(3),
+        AutoBuilder.followPath(Center_Pickup).raceWith(intake.runVolts(10.8)),
+        AutoBuilder.followPath(PickUp_LeftTrench),
+        new MoveToAngle(swerve, robotState, swerve.getState().Pose, () -> robotState.justinTurretAngle(), 1).withTimeout(3),
+        shooter.treeMapRPMCommand()
+      );
 
-      superstructure.test()
-    );
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+    }
+    
   }
 }
