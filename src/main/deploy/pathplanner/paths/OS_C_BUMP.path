@@ -16,28 +16,28 @@
     },
     {
       "anchor": {
-        "x": 2.9,
-        "y": 2.2
+        "x": 2.5,
+        "y": 2.1
       },
       "prevControl": {
-        "x": 3.15,
-        "y": 2.2
+        "x": 2.75,
+        "y": 2.1
       },
       "nextControl": {
-        "x": 2.65,
-        "y": 2.2
+        "x": 2.25,
+        "y": 2.1
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.6,
-        "y": 0.65
+        "x": 5.0,
+        "y": 0.509
       },
       "prevControl": {
-        "x": 3.0919230153719504,
-        "y": 0.7861388177239259
+        "x": 1.8653637660485023,
+        "y": 0.3927674750356627
       },
       "nextControl": null,
       "isLocked": false,
@@ -50,19 +50,39 @@
       "rotationDegrees": 40.0
     }
   ],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Shooting",
+      "minWaypointRelativePos": 0.7,
+      "maxWaypointRelativePos": 1.7,
+      "constraints": {
+        "maxVelocity": 3.0,
+        "maxAcceleration": 1.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "Pivot",
-      "waypointRelativePos": 0.6993603411513859,
-      "endWaypointRelativePos": 2.0,
+      "name": "IntakePivotUpEvent",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": null,
       "command": null
     },
     {
-      "name": "Shoot",
+      "name": "PivotEvent",
+      "waypointRelativePos": 0.6993603411513859,
+      "endWaypointRelativePos": 1.95,
+      "command": null
+    },
+    {
+      "name": "ShootEvent",
       "waypointRelativePos": 0.7,
-      "endWaypointRelativePos": 2.0,
+      "endWaypointRelativePos": 1.95,
       "command": null
     }
   ],
@@ -76,7 +96,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": null,

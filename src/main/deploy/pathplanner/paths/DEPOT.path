@@ -3,41 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.0,
-        "y": 0.5
+        "x": 3.6,
+        "y": 6.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.25,
-        "y": 0.5
+        "x": 3.3500101465863454,
+        "y": 6.0022523743515235
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.800108433734941,
-        "y": 0.5092154065620549
+        "x": 0.675,
+        "y": 6.0
       },
       "prevControl": {
-        "x": 8.076074023539926,
-        "y": 0.5092154065620549
-      },
-      "nextControl": {
-        "x": 7.4768334596634585,
-        "y": 0.5092154065620549
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 7.800108433734941,
-        "y": 3.6
-      },
-      "prevControl": {
-        "x": 8.050108433734941,
-        "y": 3.6
+        "x": 1.0359996045756634,
+        "y": 5.994118196504798
       },
       "nextControl": null,
       "isLocked": false,
@@ -47,9 +31,9 @@
   "rotationTargets": [],
   "constraintZones": [
     {
-      "name": "Intaking",
-      "minWaypointRelativePos": 1.4021321961620465,
-      "maxWaypointRelativePos": 1.9036247334754768,
+      "name": "INTAKINGDEPOT",
+      "minWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 0,
       "constraints": {
         "maxVelocity": 1.0,
         "maxAcceleration": 1.0,
@@ -63,15 +47,27 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "IntakePivotEvent",
+      "name": "IntakePivot",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
-      "name": "IntakeEvent",
-      "waypointRelativePos": 2.0,
-      "endWaypointRelativePos": 1.2827292110874189,
+      "name": "Shoot",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "Pivot",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "Intake",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": 0.5022909507445589,
       "command": null
     }
   ],
@@ -85,13 +81,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 90.00000000000007
+    "velocity": 0.0,
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

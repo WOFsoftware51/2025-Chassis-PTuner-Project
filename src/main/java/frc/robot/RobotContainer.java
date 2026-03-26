@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -343,6 +345,11 @@ public class RobotContainer {
     NamedCommands.registerCommand("ShootMore",shooter.treeMapRPMCommand().withTimeout(5));
     NamedCommands.registerCommand("PivotMore",pivot.treeMapRPMCommand().withTimeout(5));
     
+    new EventMarker("IntakePivotEvent", 0,intakePivot.runVolts(6).withTimeout(0.7));
+    new EventMarker("IntakePivotUpEvent", 0,intakePivot.runVolts(-6).withTimeout(0.53));
+    new EventMarker("IntakeEvent", 2,1.28,intake.runVolts(10.56));
+    new EventMarker("ShootEvent", 0.70,1.95,shooter.treeMapRPMCommand());
+    new EventMarker("PivotEvent", 0.70,1.95,pivot.treeMapRPMCommand());
 
     // NamedCommands.registerCommand("Spin", spindexer.runSpindexerVoltsCommand(12.0));
     // NamedCommands.registerCommand("Feed", feeder.runFeederVoltsCommand(12));
@@ -361,7 +368,7 @@ public class RobotContainer {
         a_chooser.addOption("S_C_S_LEFT", 4);
         a_chooser.addOption("BUMP_HP", 5);
         a_chooser.addOption("OSMOSIS", 6);
-
+        a_chooser.addOption("MEIOSIS", 7);
     }
 
 
@@ -379,8 +386,10 @@ public class RobotContainer {
                 return new BUMP_HP(spindexer, feeder, shooter, intake, intakePivot, pivot);
             case 6:
                 return new PathPlannerAuto("OSMOSIS");
+            case 7:
+                return new PathPlannerAuto("MEIOSIS");
             default:
-                 return new Shoot8(spindexer,feeder,shooter);
+                 return new Test(swerve, robotState, shooter, feeder, spindexer, pivot);
 
         }
     }  
