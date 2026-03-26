@@ -9,11 +9,14 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -279,6 +282,7 @@ public class RobotContainer {
             // operator.L2().whileTrue(feeder.runFeederVoltsCommand(12));
 
             new Trigger(() -> shooter.atRPM).whileTrue(feeder.runFeederVoltsCommand(12));
+            new Trigger(() -> shooter.atRPM).whileTrue(feeder.runFeederVoltsCommand(12));
 
         /*
         Spindexer Controls
@@ -286,6 +290,7 @@ public class RobotContainer {
             // operator.rightTrigger().whileTrue(spindexer.runSpindexerVoltsCommand(12));
             // operator.L2().whileTrue(spindexer.runSpindexerVoltsCommand(12));
 
+            new Trigger(() -> shooter.atRPM).whileTrue(spindexer.runSpindexerVoltsCommand(12));
             new Trigger(() -> shooter.atRPM).whileTrue(spindexer.runSpindexerVoltsCommand(12));
 
 

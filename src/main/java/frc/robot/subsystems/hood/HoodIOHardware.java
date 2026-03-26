@@ -65,7 +65,6 @@ public class HoodIOHardware implements HoodIO{
         
         configs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
 
-        
         configs.CurrentLimits.StatorCurrentLimitEnable = true;
         configs.CurrentLimits.StatorCurrentLimit = 20;
 

@@ -134,7 +134,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public Command runRPMCommand(double rpm) {
-        return Commands.run(() ->
+        return run(() ->
             {io.runVelocityRPM(RPM.of(rpm));
                 
             if (Math.abs(inputs.targetVelocity.in(RPM) - inputs.currentVelocity.in(RPM)) < 50) {

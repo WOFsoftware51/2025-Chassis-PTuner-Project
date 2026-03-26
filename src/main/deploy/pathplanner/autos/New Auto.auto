@@ -3,26 +3,7 @@
   "command": {
     "type": "sequential",
     "data": {
-      "commands": [
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightTrench_Center"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightCenter_Pickup"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightPickUp_RightTrench"
-          }
-        }
-      ]
+      "commands": []
     }
   },
   "resetOdom": true,

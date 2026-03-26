@@ -22,6 +22,9 @@ public class FeederIOHardware implements FeederIO {
     public FeederIOHardware() {
         configs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
         configs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
+
+        configs.CurrentLimits.StatorCurrentLimitEnable = true;
+        configs.CurrentLimits.StatorCurrentLimit = 80;
     
         configs.CurrentLimits.StatorCurrentLimitEnable = true;
         configs.CurrentLimits.StatorCurrentLimit = 80;
