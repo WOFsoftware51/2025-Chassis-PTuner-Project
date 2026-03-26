@@ -24,6 +24,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -177,13 +178,14 @@ public class ShooterIOSim implements ShooterIO{
             // The shooter facing direction is the same as the robot’s facing direction
             mapleSim.getSimulatedDriveTrainPose().getRotation().plus(
                 // Add the shooter’s rotation
-                RobotState.getInstance().getRobotToTurret().getRotation().toRotation2d()
-            ),
+                // RobotState.getInstance().getRobotToTurret().getRotation().toRotation2d()
+                new Rotation2d(Degrees.of(90))
+                ),
             // Initial height of the flying note
             RobotState.getInstance().getRobotToTurret().getTranslation().getMeasureZ(), 
             // The launch speed is proportional to the RPM; assumed to be 16 meters/second at 6000 RPM
             // LinearVelocity.ofBaseUnits(speed.getVelocityMeasure().times(20/6000).in(RPM), MetersPerSecond),
-            LinearVelocity.ofBaseUnits(speeds*10/6000, MetersPerSecond),
+            LinearVelocity.ofBaseUnits(speeds*17/6000, MetersPerSecond),
             // The angle at which the note is launched
             Degrees.of(60)
         );

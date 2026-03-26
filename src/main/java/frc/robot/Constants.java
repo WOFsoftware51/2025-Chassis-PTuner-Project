@@ -98,16 +98,16 @@ public final class Constants {
   }
   
   public static final class AutoConstants {
-    public static final double kPDriveController = 10.0;
+    public static final double kPDriveController = 4.0;
 
-    public static final double kPThetaController = 5.0;
+    public static final double kPThetaController = 3.0;
   }
 
   public static final class DriveConstants {
-    public static final double kMaxSpeedMetersPerSecond = 9.15/1;
-    public static final double kMaxAccelerationMetersPerSecondPerSecond = 9.15*2;
+    public static final double kMaxSpeedMetersPerSecond = 4/1;
+    public static final double kMaxAccelerationMetersPerSecondPerSecond = 4*2;
 
-    public static final double kMaxOmegaRadiansPerSecond = 6*1;
+    public static final double kMaxOmegaRadiansPerSecond = 3*1;
     public static final double kMaxOmegaRadiansPerSecondPerSecond = 6*2;
   }
 
@@ -119,11 +119,11 @@ public final class Constants {
 
   public static final class IntakePivotConstants {
     public static final int kMotorID = 41;
-    public static final int kCANcoderID = 1;
+    public static final int kCANcoderID = 2;
     public static final double kGearRatio = 80.0;
     public static final double kCANCoderGearRatio = 2.0; //2x slower than givto
 
-    public static final double kCANCoderOffset = 0.429443;
+    public static final double kCANCoderOffset = 0.158936;
 
     public static final double kForwardLimit = 0.0;
     public static final double kReverseLimit = 0.0;
@@ -145,22 +145,22 @@ public final class Constants {
   
   public static final class TurretConstants {
     public static final int kMotorID = 46;
-    public static final double kGearRatio = 56.66;//37.33; 
+    public static final double kGearRatio = 45.3333;//37.33; 
 
     // public static final double kForwardLimit = 135.0;
     // public static final double kReverseLimit = -135;
-    public static final double kForwardLimit = 380.0;
-    public static final double kReverseLimit = -20.0;
+    public static final double kForwardLimit = 90.0 - 10.0;
+    public static final double kReverseLimit = -290.0 + 10;
         
   }
   
-  public static final class PivotConstants {
+  public static final class HoodConstants {
     public static final int kMotorID = 48;
-    public static final int kCANCoderID = 2;
+    public static final int kCANCoderID = 3;
     public static final double kGearRatio = 320.0;
     public static final double kCANCoderGearRatio = 9.0;
 
-    public static final double kCANCoderOffset = -0.146729;
+    public static final double kCANCoderOffset = -0.185547;
 
 
     public static final double kForwardLimit = 21;
@@ -181,7 +181,7 @@ public final class Constants {
   }
 
   public static final class VisionConstants {
-    public static final String kChassisLimelight = "chassis-limelight";
+    public static final String kChassisLimelight = "limelight-chassis";
     public static final String kTurretLimelight = "limelight-turret";
   }
 

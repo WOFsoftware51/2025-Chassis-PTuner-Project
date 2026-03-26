@@ -22,7 +22,7 @@ public class TurretIOSim implements TurretIO {
     private final DCMotorSim sim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
             DCMotor.getKrakenX44(1), 
-            0.1,
+            0.001,
             Constants.TurretConstants.kGearRatio
         ),
         DCMotor.getKrakenX44(1)

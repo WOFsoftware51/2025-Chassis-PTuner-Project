@@ -36,7 +36,7 @@ public class MoveToAngle extends Command {
   private RobotState robotState;
   
   private double thetaErrorAbs;
-  private double ffMinRadius = 0.0, ffMaxRadius = 0.1;
+  private double ffMinRadius = 0.0,   ffMaxRadius = 0.01;
   private Angle targetLocation;
 
   private LoggedTunableNumber kPThetaController = new LoggedTunableNumber("MoveToAngle/kPThetaController", 0.0);

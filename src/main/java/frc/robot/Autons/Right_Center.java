@@ -4,8 +4,9 @@
 
 package frc.robot.Autons;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj2.command.Commands;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.RobotState;
 import frc.robot.commands.factories.Superstructure;
@@ -20,9 +21,9 @@ import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Test extends SequentialCommandGroup {
-  /** Creates a new test. */
-  public Test(    
+public class Right_Center extends SequentialCommandGroup {
+  /** Creates a new Right_Center. */
+  public Right_Center(    
     Swerve swerve, 
     RobotState robotState, 
     ShooterSubsystem shooter, 
@@ -33,22 +34,29 @@ public class Test extends SequentialCommandGroup {
     HoodSubsystem hood, 
     Superstructure superstructure
   ) {
+    PathPlannerPath RightTrench_Center;
+    PathPlannerPath RightCenter_Pickup;
+    PathPlannerPath RightPickUp_RightTrench;
 
-    addCommands(
-      Commands.runOnce(() -> swerve.resetRotation(new Rotation2d())),
-      Commands.waitSeconds(1),
-      // new MoveToAngle(
-      //   swerve, 
-      //   robotState, 
-      //   robotState.getPose2d(),
-      //   () -> robotState.justinTurretAngle(),
-      //   // () -> robotState.getRobotToAllianceHubDegrees(),
-      //   // () -> robotState.getTurretToAllianceHubDegrees(),
-      //   1
-      // ),
-      // superstructure.shootTreeMap()
+    try {
+      RightTrench_Center = PathPlannerPath.fromPathFile("RightTrench_Center");
+      RightCenter_Pickup = PathPlannerPath.fromPathFile("RightCenter_Pickup");
+      RightPickUp_RightTrench = PathPlannerPath.fromPathFile("RightPickUp_RightTrench");
 
-      superstructure.test()
-    );
+      addCommands(
+        AutoBuilder.resetOdom(RightTrench_Center.getStartingHolonomicPose().get()), 
+        superstructure.test(),
+        AutoBuilder.followPath(RightTrench_Center), 
+        // intakePivot.runPivotTimeBasedCommand(), 
+        AutoBuilder.followPath(RightCenter_Pickup).raceWith(intake.runVolts(10.8)), 
+        AutoBuilder.followPath(RightPickUp_RightTrench), 
+        superstructure.test()
+
+      );
+
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+    }
   }
 }

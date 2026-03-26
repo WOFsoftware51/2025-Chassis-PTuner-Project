@@ -2,10 +2,13 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.util.LoggedTunableNumber;
@@ -28,26 +31,23 @@ public class ShooterSubsystem extends SubsystemBase {
     public boolean gainsChanged = false;
 
     public boolean atRPM = false;
+    public double chassisShootingSpeed = 1.0;
 
     public ShooterSubsystem(ShooterIO io) {
         this.io = io;
 
-        treeMap.put(Inches.of(101.90).in(Meters), 2600.0);
-        treeMap.put(Inches.of(144.50).in(Meters), 2750.0);
-        treeMap.put(Inches.of(182.38).in(Meters), 3120.0);
-        treeMap.put(Inches.of(207.28).in(Meters), 3200.0);
-        treeMap.put(Inches.of(66.000).in(Meters), 2300.0);
-        treeMap.put(Inches.of(77.8).in(Meters), 2380.0);
-        treeMap.put(Inches.of(91.2).in(Meters), 2450.0);
-        treeMap.put(Inches.of(116.0).in(Meters), 2500.0);
-        treeMap.put(Inches.of(134.7).in(Meters), 2600.0);
-        treeMap.put(Inches.of(160.3).in(Meters), 2800.0);
-        treeMap.put(Inches.of(172.3).in(Meters), 3000.0);
-        treeMap.put(Inches.of(213).in(Meters), 3350.0);
-
+        treeMap.put(Inches.of(80.982223).in(Meters), 2350.0);
+        treeMap.put(Inches.of(100.5).in(Meters), 2450.0);
+        treeMap.put(Inches.of(120.0).in(Meters), 2500.0);
+        treeMap.put(Inches.of(140.9).in(Meters), 2600.0);
+        treeMap.put(Inches.of(160.15).in(Meters), 2700.0);
+        treeMap.put(Inches.of(180.4).in(Meters), 2800.0);
+        treeMap.put(Inches.of(204.16).in(Meters), 2950.0);
     }
 
-
+    public Supplier<Double> getChassisShootingSpeed() {
+        return () -> chassisShootingSpeed;
+    }
 
 
     @Override
@@ -70,8 +70,18 @@ public class ShooterSubsystem extends SubsystemBase {
         }
 
 
+
+        if(inputs.currentVelocity.in(RPM)>100) {
+            chassisShootingSpeed = 0.5;
+        }
+        else {
+            chassisShootingSpeed = 1.0;
+        }
+
         
         Logger.processInputs("Shooter", inputs);
+
+        Logger.recordOutput("Shooter/chassisShootingSpeed", chassisShootingSpeed);
 
         Logger.recordOutput("Shooter/TreeMap Angle", treeMap.get(Double.valueOf(RobotState.getInstance().getDistanceFromHubMeters())));
 
@@ -109,10 +119,32 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public Command runRPMCommand() {
         return run(() ->
-            io.runVelocityRPM(RPM.of(shooterRPM.get()))
+            {io.runVelocityRPM(RPM.of(shooterRPM.get()));
+
+            if (Math.abs(inputs.targetVelocity.in(RPM) - inputs.currentVelocity.in(RPM)) < 50) {
+                    atRPM = true;
+            }}
+
         )
         .finallyDo(() ->
-            io.stop()
+            {io.stop();
+            atRPM = false;}
+
+        );
+    }
+
+    public Command runRPMCommand(double rpm) {
+        return Commands.run(() ->
+            {io.runVelocityRPM(RPM.of(rpm));
+                
+            if (Math.abs(inputs.targetVelocity.in(RPM) - inputs.currentVelocity.in(RPM)) < 50) {
+                atRPM = true;
+            }}
+
+        )
+        .finallyDo(() ->
+            {io.stop();
+            atRPM = false;}
         );
     }
 

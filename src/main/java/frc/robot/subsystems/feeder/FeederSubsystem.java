@@ -21,6 +21,15 @@ public class FeederSubsystem extends SubsystemBase{
         Logger.processInputs("Feeder", inputs);
     }
 
+    public Command run() {
+        return run(() ->
+            io.runVolts(Volts.of(12))
+        )
+        .finallyDo(() ->
+            io.stop()
+        );
+    }
+
     public Command runFeederVoltsCommand(double volts) {
         return run(() ->
             io.runVolts(Volts.of(volts))

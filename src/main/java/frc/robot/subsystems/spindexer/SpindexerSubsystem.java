@@ -21,6 +21,15 @@ public class SpindexerSubsystem extends SubsystemBase {
     Logger.processInputs("Spindexter", inputs);
   }
 
+  public Command run() {
+    return run(() -> 
+      io.runVolts(Volts.of(12))
+    )
+    .finallyDo(() ->
+      io.stop()
+    );
+  }
+
   public Command runSpindexerVoltsCommand(double volts) {
     return run(() -> 
       io.runVolts(Volts.of(volts))
