@@ -38,6 +38,14 @@
       "prevControl": {
         "x": 1.8653637660485023,
         "y": 0.3927674750356627
+=======
+        "x": 4.4,
+        "y": 0.5
+      },
+      "prevControl": {
+        "x": 1.2632095512990973,
+        "y": 0.5000000000000003
+>>>>>>> Stashed changes
       },
       "nextControl": null,
       "isLocked": false,
@@ -74,6 +82,7 @@
       "command": null
     },
     {
+<<<<<<< Updated upstream
       "name": "PivotEvent",
       "waypointRelativePos": 0.6993603411513859,
       "endWaypointRelativePos": 1.95,
@@ -83,6 +92,17 @@
       "name": "ShootEvent",
       "waypointRelativePos": 0.7,
       "endWaypointRelativePos": 1.95,
+=======
+      "name": "",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ScoreEvent",
+      "waypointRelativePos": 0.7021764032073337,
+      "endWaypointRelativePos": 1.9530355097365453,
+>>>>>>> Stashed changes
       "command": null
     }
   ],

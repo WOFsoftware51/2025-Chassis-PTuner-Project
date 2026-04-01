@@ -30,6 +30,7 @@ public interface IntakePivotIO {
         public MutCurrent torqueCurrent = Amps.mutable(0);
 
         public MutAngle canCoderPosition = Degrees.mutable(0);
+        public boolean limitSwitchBoolean;
     }
 
     void updateInputs(IntakePivotIOInputs inputs);

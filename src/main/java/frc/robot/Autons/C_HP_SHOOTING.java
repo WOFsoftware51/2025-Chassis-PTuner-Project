@@ -4,13 +4,10 @@
 
 package frc.robot.Autons;
 
-import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.subsystems.IntakePivotSubsystem;
 import frc.robot.subsystems.feeder.FeederSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intakePivot.IntakePivotSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -27,24 +24,25 @@ public class C_HP_SHOOTING extends SequentialCommandGroup {
     AutoPath C_HP = AutoPath.PP("C_HP");
 
     addCommands(
-      new ParallelCommandGroup(
-        NamedCommands.getCommand("Shoot"),
-        NamedCommands.getCommand("Pivot")
-       ),    
-      BTW_TR.resetOdometryToStart(),
-      BTW_TR.follow(),  
-      NamedCommands.getCommand("IntakePivot"),
-      new ParallelRaceGroup(
-        TR_C.follow(),
-        NamedCommands.getCommand("Intake")),
-      new ParallelCommandGroup( 
-        C_TR_POS.follow(),
-        NamedCommands.getCommand("IntakePivotUp")),
-      C_HP.follow(),
-      new ParallelCommandGroup(
-        NamedCommands.getCommand("ShootMore"),
-        NamedCommands.getCommand("PivotMore")
-        )
+    //   BTW_BUMP.resetOdometryToStart(),
+    //   new ParallelCommandGroup(
+    //     NamedCommands.getCommand("Shoot"),
+    //     NamedCommands.getCommand("Pivot")
+    //    ),
+    //    new ParallelCommandGroup(
+    //    BTW_BUMP.follow(),
+    //    NamedCommands.getCommand("IntakePivot")
+    //    ),
+    //  new ParallelRaceGroup(
+    //     BUMP_C.follow(),
+    //     NamedCommands.getCommand("Intake")),
+    //     new ParallelCommandGroup( 
+    //       C_BUMP.follow(),
+    //       NamedCommands.getCommand("IntakePivotUp")),
+    //   new ParallelCommandGroup(
+    //     NamedCommands.getCommand("ShootMore"),
+    //     NamedCommands.getCommand("PivotMore")
+    //     )
     );
 
     

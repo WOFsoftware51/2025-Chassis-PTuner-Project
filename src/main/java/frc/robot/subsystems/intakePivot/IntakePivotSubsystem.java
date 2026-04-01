@@ -32,6 +32,33 @@ public class IntakePivotSubsystem extends SubsystemBase {
     );
   }
 
+   public Command goDown() {
+    return run(() ->
+      {
+        if(inputs.position.in(Degrees) < -30) {
+          io.runVolts(Volts.of(8));
+        }
+        else {
+          io.runVolts(Volts.of(4));
+        }
+
+      }
+    );
+  }
+
+  public Command bounce() {
+    return run(() ->
+      {
+        if(up) {
+          io.runVolts(Volts.of(-4));
+        }
+        else if(!up){
+          io.runVolts(Volts.of(4));
+        }
+      }
+    );
+  }
+
 
   public Command runVolts(double volts) {
     return run(() ->
@@ -53,11 +80,21 @@ public class IntakePivotSubsystem extends SubsystemBase {
   } 
 
 
-
+  public boolean up = false;
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("IntakePivot", inputs);
+
+    
+    if(inputs.position.in(Degrees) > -40) {
+      up = true;
+    }
+    else if(inputs.position.in(Degrees) < -80) {
+      up = false;
+    }
+
+
   }
 }

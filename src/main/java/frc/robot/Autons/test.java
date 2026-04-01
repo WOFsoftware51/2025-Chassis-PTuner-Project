@@ -20,9 +20,9 @@ import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Test extends SequentialCommandGroup {
+public class test extends SequentialCommandGroup {
   /** Creates a new test. */
-  public Test(    
+  public test(    
     Swerve swerve, 
     RobotState robotState, 
     ShooterSubsystem shooter, 

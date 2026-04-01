@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.subsystems.vision.LimelightHelpers;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public final class Constants {
@@ -123,7 +124,7 @@ public final class Constants {
     public static final double kGearRatio = 80.0;
     public static final double kCANCoderGearRatio = 2.0; //2x slower than givto
 
-    public static final double kCANCoderOffset = 0.158936;
+    public static final double kCANCoderOffset = 0.433838;
 
     public static final double kForwardLimit = 0.0;
     public static final double kReverseLimit = 0.0;
@@ -160,7 +161,7 @@ public final class Constants {
     public static final double kGearRatio = 320.0;
     public static final double kCANCoderGearRatio = 9.0;
 
-    public static final double kCANCoderOffset = -0.185547;
+    public static final double kCANCoderOffset = -0.422;
 
 
     public static final double kForwardLimit = 21;
@@ -183,7 +184,21 @@ public final class Constants {
   public static final class VisionConstants {
     public static final String kChassisLimelight = "limelight-chassis";
     public static final String kTurretLimelight = "limelight-turret";
+
   }
 
+
+private boolean shooting = false;
+private static Constants instance = new Constants();
+
+ public static Constants getInstance() {
+        return instance;
+    }
+    public void setShooting(boolean isshooting) {
+        this.shooting = isshooting;
+    }
+     public boolean getShooting() {
+        return shooting;
+    }
 
 }

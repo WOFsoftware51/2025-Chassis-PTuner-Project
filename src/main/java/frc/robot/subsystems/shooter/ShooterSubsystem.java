@@ -72,7 +72,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
         if(inputs.currentVelocity.in(RPM)>100) {
-            chassisShootingSpeed = 0.5;
+            chassisShootingSpeed = 0.25;
         }
         else {
             chassisShootingSpeed = 1.0;

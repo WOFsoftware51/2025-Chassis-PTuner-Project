@@ -5,9 +5,15 @@
     "data": {
       "commands": [
         {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/autos/DEPOT.auto
           "type": "path",
           "data": {
             "pathName": "DEPOT"
+========
+          "type": "named",
+          "data": {
+            "name": "Score"
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/autos/Shoot8.auto
           }
         }
       ]

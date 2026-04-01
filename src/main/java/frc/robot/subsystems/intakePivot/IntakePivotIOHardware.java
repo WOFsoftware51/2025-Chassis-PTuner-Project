@@ -1,6 +1,11 @@
 package frc.robot.subsystems.intakePivot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -21,12 +26,14 @@ import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutCurrent;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.util.LoggedTunableNumber;
 
 public class IntakePivotIOHardware implements IntakePivotIO{
     private TalonFX motor = new TalonFX(Constants.IntakePivotConstants.kMotorID, Constants.kCANIvoreName);
     private CANcoder cancoder = new CANcoder(Constants.IntakePivotConstants.kCANcoderID, Constants.kCANIvoreName);
+    private DigitalInput limitSwitch = new DigitalInput(5);
 
     private TalonFXConfiguration configs = new TalonFXConfiguration();
     private CANcoderConfiguration canCoderConfigs = new CANcoderConfiguration();
@@ -75,10 +82,18 @@ public class IntakePivotIOHardware implements IntakePivotIO{
 
     @Override
     public void updateInputs(IntakePivotIOInputs inputs) {
-        inputs.position.mut_replace(motor.getPosition().getValue());
+        double motorRotations = motor.getPosition().getValueAsDouble();
+        double motorRPS = motor.getVelocity().getValueAsDouble();
+        double motorRPSPS = motor.getAcceleration().getValueAsDouble();
 
-        inputs.velocity.mut_replace(motor.getVelocity().getValue());
-        inputs.acceleration.mut_replace(motor.getAcceleration().getValue());
+        double pivotDegrees = Rotations.of(motorRotations).in(Degrees)/Constants.IntakePivotConstants.kGearRatio;
+        double velocityDegreesPerSecond = RotationsPerSecond.of(motorRPS).in(DegreesPerSecond)/Constants.IntakePivotConstants.kGearRatio;
+        double velocityDegreesPerSecondPerSecond = RotationsPerSecondPerSecond.of(motorRPSPS).in(DegreesPerSecondPerSecond)/Constants.IntakePivotConstants.kGearRatio;
+
+        inputs.position.mut_replace(pivotDegrees, Degrees);
+
+        inputs.velocity.mut_replace(velocityDegreesPerSecond, DegreesPerSecond);
+        inputs.acceleration.mut_replace(velocityDegreesPerSecondPerSecond, DegreesPerSecondPerSecond);
 
         inputs.appliedVoltage.mut_replace(motor.getMotorVoltage().getValue());
 
@@ -86,13 +101,18 @@ public class IntakePivotIOHardware implements IntakePivotIO{
         inputs.torqueCurrent.mut_replace(motor.getTorqueCurrent().getValue());
 
         inputs.canCoderPosition.mut_replace(cancoder.getPosition().getValue());
+
+        inputs.limitSwitchBoolean = getLimitSwitch();
     }
 
+    private boolean getLimitSwitch() {
+        return !limitSwitch.get();
+    }
 
     @Override
     public void runVolts(Voltage volts) {
         double clampedEffort = MathUtil.clamp(volts.in(Volts), -12, 12);
-        motor.setControl(new VoltageOut(clampedEffort).withEnableFOC(true));
+        motor.setControl(new VoltageOut(clampedEffort).withEnableFOC(true).withLimitForwardMotion(getLimitSwitch()));
     }
 
 
@@ -100,7 +120,7 @@ public class IntakePivotIOHardware implements IntakePivotIO{
     public void runSetpoint(Angle degrees) {
         this.target = degrees.in(Degrees);
         this.motion.withPosition(target).withEnableFOC(true);
-        motor.setControl(this.motion);
+        motor.setControl(this.motion.withLimitForwardMotion(getLimitSwitch()));
     }
 
 

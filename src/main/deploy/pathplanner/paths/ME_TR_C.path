@@ -3,12 +3,20 @@
   "waypoints": [
     {
       "anchor": {
+<<<<<<< Updated upstream
         "x": 5.0,
+=======
+        "x": 4.4,
+>>>>>>> Stashed changes
         "y": 7.5
       },
       "prevControl": null,
       "nextControl": {
+<<<<<<< Updated upstream
         "x": 6.000000000000001,
+=======
+        "x": 5.3999999999999995,
+>>>>>>> Stashed changes
         "y": 7.5
       },
       "isLocked": false,
@@ -16,6 +24,7 @@
     },
     {
       "anchor": {
+<<<<<<< Updated upstream
         "x": 7.5,
         "y": 7.6
       },
@@ -26,6 +35,18 @@
       "nextControl": {
         "x": 7.8,
         "y": 7.6
+=======
+        "x": 7.6,
+        "y": 7.5
+      },
+      "prevControl": {
+        "x": 7.35,
+        "y": 7.5
+      },
+      "nextControl": {
+        "x": 7.849999999999997,
+        "y": 7.5
+>>>>>>> Stashed changes
       },
       "isLocked": false,
       "linkedName": null
@@ -33,11 +54,19 @@
     {
       "anchor": {
         "x": 7.8,
+<<<<<<< Updated upstream
         "y": 4.4
       },
       "prevControl": {
         "x": 7.8,
         "y": 4.65
+=======
+        "y": 4.5
+      },
+      "prevControl": {
+        "x": 7.8,
+        "y": 4.75
+>>>>>>> Stashed changes
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,8 +77,13 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
+<<<<<<< Updated upstream
       "minWaypointRelativePos": 1.3953091684434944,
       "maxWaypointRelativePos": 2.0,
+=======
+      "minWaypointRelativePos": 2.0,
+      "maxWaypointRelativePos": 1.299786780383795,
+>>>>>>> Stashed changes
       "constraints": {
         "maxVelocity": 1.0,
         "maxAcceleration": 1.0,
@@ -64,6 +98,7 @@
   "eventMarkers": [
     {
       "name": "IntakePivotEvent",
+<<<<<<< Updated upstream
       "waypointRelativePos": 0,
       "endWaypointRelativePos": null,
       "command": null
@@ -72,6 +107,16 @@
       "name": "Intake",
       "waypointRelativePos": 2.0,
       "endWaypointRelativePos": 1.2008528784648185,
+=======
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": 0.5005727376861395,
+      "command": null
+    },
+    {
+      "name": "IntakeEvent",
+      "waypointRelativePos": 2.0,
+      "endWaypointRelativePos": 1.30319829424307,
+>>>>>>> Stashed changes
       "command": null
     }
   ],

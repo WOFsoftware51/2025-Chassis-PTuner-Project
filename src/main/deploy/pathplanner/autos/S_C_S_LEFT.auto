@@ -5,72 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Pivot"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakePivot"
+            "pathName": "TR_C_LEFT"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BTW_TR_LEFT"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "TR_C_LEFT"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "C_TR_POS_LEFT"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakePivotUp"
-                }
-              }
-            ]
+            "pathName": "C_TR_POS_LEFT"
           }
         },
         {
@@ -80,22 +23,9 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Pivot"
-                }
-              }
-            ]
+            "name": "Score"
           }
         }
       ]

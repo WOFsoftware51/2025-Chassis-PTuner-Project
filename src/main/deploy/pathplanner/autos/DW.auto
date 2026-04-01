@@ -7,25 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "TR_C"
+            "pathName": "emptyRightTrench"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "C_TR_POS"
+            "pathName": "RightTrench_Center"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "C_TR"
+            "pathName": "RightPickUp_RightTrench"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Score"
+            "pathName": "RightCenter_Pickup2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightPickUp_RightTrench2"
           }
         }
       ]

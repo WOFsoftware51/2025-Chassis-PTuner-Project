@@ -4,12 +4,7 @@
 
 package frc.robot.Autons;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.commands.factories.Superstructure;
-import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.feeder.FeederSubsystem;
 import frc.robot.subsystems.hood.HoodSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
@@ -19,40 +14,30 @@ import frc.robot.subsystems.spindexer.SpindexerSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class OSMOSIS extends SequentialCommandGroup {
+public class MEIOSIS extends SequentialCommandGroup {
   /** Creates a new test. */
-  public OSMOSIS(
+  public MEIOSIS(
     SpindexerSubsystem spindexerSubsystem,
     FeederSubsystem feederSubsystem,
     ShooterSubsystem shooterSubsystem,
     IntakeSubsystem intakeSubsystem,
     IntakePivotSubsystem intakePivotSubsystem,
-    HoodSubsystem hoodSubsystem,
-    Swerve swerve,
-    Superstructure superstructure
+    HoodSubsystem hoodSubsystem
     ) {
-    PathPlannerPath OS_TR_C;
-    PathPlannerPath OS_C_BUMP;
-    try{
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    OS_TR_C = PathPlannerPath.fromPathFile("OS_TR_C");
-    OS_C_BUMP = PathPlannerPath.fromPathFile("OS_C_BUMP");   
+    AutoPath ME_TR_C = AutoPath.PP("ME_TR_C");
+    AutoPath ME_C_BUMP = AutoPath.PP("ME_C_BUMP");
     //AutoPath C_BUMP = AutoPath.PP("C_BUMP");
 
     addCommands(
-    AutoBuilder.resetOdom(OS_TR_C.getStartingHolonomicPose().get()),
-    AutoBuilder.followPath(OS_TR_C),
-    AutoBuilder.followPath(OS_C_BUMP),
-    AutoBuilder.followPath(OS_TR_C),
-    AutoBuilder.followPath(OS_C_BUMP)
+      ME_TR_C.resetOdometryToStart(),
+      ME_TR_C.follow(),
+      ME_C_BUMP.follow(),
+      ME_TR_C.follow(),
+      ME_C_BUMP.follow()
    );
 
-    }
-    catch(Exception e) {
-      e.printStackTrace();
-    }  
+    
   }
 }
-
-

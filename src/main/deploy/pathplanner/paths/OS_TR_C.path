@@ -3,12 +3,20 @@
   "waypoints": [
     {
       "anchor": {
+<<<<<<< Updated upstream
         "x": 5.0,
+=======
+        "x": 4.4,
+>>>>>>> Stashed changes
         "y": 0.5
       },
       "prevControl": null,
       "nextControl": {
+<<<<<<< Updated upstream
         "x": 5.25,
+=======
+        "x": 4.65,
+>>>>>>> Stashed changes
         "y": 0.5
       },
       "isLocked": false,
@@ -64,8 +72,13 @@
   "eventMarkers": [
     {
       "name": "IntakePivotEvent",
+<<<<<<< Updated upstream
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
+=======
+      "waypointRelativePos": 0.9954180985108816,
+      "endWaypointRelativePos": 0.5005727376861395,
+>>>>>>> Stashed changes
       "command": null
     },
     {

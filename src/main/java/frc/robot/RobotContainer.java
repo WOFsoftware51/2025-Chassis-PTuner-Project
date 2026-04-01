@@ -9,18 +9,17 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
+
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.EventMarker;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.RobotController;
@@ -29,23 +28,31 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Autons.BUMP_HP;
+import frc.robot.Autons.AutoPath;
+import frc.robot.Autons.Left_Center;
+import frc.robot.Autons.Left_Middle2Cycle;
+import frc.robot.Autons.Left_StopAtMiddle;
+import frc.robot.Autons.MEIOSIS;
 import frc.robot.Autons.OSMOSIS;
+import frc.robot.Autons.Right_Center;
+import frc.robot.Autons.Right_Middle2Cycle;
+import frc.robot.Autons.Right_StopAtMiddle;
 import frc.robot.Autons.S_C_S;
 import frc.robot.Autons.S_C_S_LEFT;
 import frc.robot.Autons.Shoot8;
-import frc.robot.Autons.Test;
+import frc.robot.Autons.test;
+import frc.robot.Autons.doNOTHING;
 import frc.robot.commands.MoveToAngle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.IntakePivotSubsystem;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.CANdle.CANdleCommand;
+import frc.robot.subsystems.CANdle.CANdleSubsystem;
 import frc.robot.subsystems.feeder.FeederIOHardware;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.feeder.FeederSubsystem;
@@ -74,6 +81,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 public class RobotContainer {
+    public double Speedmodifier = 0.7;
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity: 0.8435211984 RPS
 
@@ -110,8 +118,8 @@ public class RobotContainer {
     private final SpindexerSubsystem spindexer;
     private final IntakeSubsystem intake;
     private final IntakePivotSubsystem intakePivot;
-
-    
+    private final Superstructure superstructure;
+    private final CANdleSubsystem cANdle;
     private boolean operatorRumble = false;
 
     LoggedTunableNumber speedLeft = new LoggedTunableNumber("Pose/speedLeft", 5);
@@ -165,14 +173,11 @@ public class RobotContainer {
         this.shooter = new ShooterSubsystem(
             Robot.isReal() ? new ShooterIOHardware() : new ShooterIOSim(this.swerve.mapleSimSwerveDrivetrain.mapleSimDrive)
         );
-        
-         
-        // eventMap.put("IntakePivot",intakePivot.runVolts(6));
-        // eventMap.put("Shoot", shooter.treeMapRPMCommand());
-        // eventMap.put("Pivot", pivot.treeMapRPMCommand());
-        // eventMap.put("IntakePivotUp", intakePivot.runVolts(-6));
-        // eventMap.put("Intake", intake.runVolts(10.56));
+        this.cANdle = new CANdleSubsystem(
+        );
 
+        
+        this.superstructure = new Superstructure(swerve, intake, intakePivot, spindexer, feeder, turret, shooter, hood);
 
         configureBindings();
         printAutons();
@@ -188,11 +193,16 @@ public class RobotContainer {
             swerve.setDefaultCommand(
                 // Drivetrain will execute this command periodically
                 swerve.applyRequest(() ->
-                    drive.withVelocityX(-driver.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                        .withVelocityY(-driver.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(-driver.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    drive.withVelocityX(-driver.getLeftY() * MaxSpeed * Speedmodifier * shooter.getChassisShootingSpeed().get()) // Drive forward with negative Y (forward)
+                        .withVelocityY(-driver.getLeftX() * MaxSpeed * Speedmodifier * shooter.getChassisShootingSpeed().get()) // Drive left with negative X (left)
+                        .withRotationalRate(-driver.getRightX() * MaxAngularRate * shooter.getChassisShootingSpeed().get()) // Drive counterclockwise with negative X (left)
                 )
             );
+            new Trigger(driver.rightTrigger()).onTrue(Commands.runOnce(() -> {Speedmodifier = 1.0;}));
+            new Trigger(driver.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.5;}));
+            //new Trigger(operator.rightTrigger()).onTrue(Commands.runOnce(() -> {Speedmodifier = 0.1;}));
+            //new Trigger(operator.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.5;}));
+
             // driver.y().whileTrue(
             //     swerve.applyRequest(() ->
             //         poseTuning.withVelocityX(speedForward.get())
@@ -242,6 +252,10 @@ public class RobotContainer {
             driver.start().onTrue(swerve.runOnce(() -> swerve.resetPose(new Pose2d())));
             // driver.touchpad().onTrue(swerve.runOnce(() -> swerve.resetPose(new Pose2d())));
 
+        /*CANdle */
+        
+            cANdle.setDefaultCommand(new CANdleCommand(cANdle));
+
         /*
         Turret Controls
         */
@@ -256,11 +270,10 @@ public class RobotContainer {
         Shooter Controls
         */
             new Trigger(() -> shooter.gainsChanged).whileTrue(shooter.updateGainsCommand());
-            // operator.rightTrigger().whileTrue(shooter.runRPMCommand());
-            operator.leftTrigger().whileTrue(shooter.runRPMCommand(3500));
-
-
+            // driver.rightTrigger().whileTrue(shooter.runRPMCommand());
             operator.rightTrigger().whileTrue(shooter.treeMapRPMCommand());
+            operator.leftTrigger().whileTrue(shooter.runRPMCommand(3500));
+            
             // operator.R2().whileTrue(shooter.treeMapRPMCommand());
             
             new Trigger(() -> shooter.atRPM).onTrue(
@@ -277,13 +290,15 @@ public class RobotContainer {
         /*
         Pivot Controls
         */
-            pivot.setDefaultCommand(pivot.runToPositionCommand(0));
-            // pivot.setDefaultCommand(pivot.treeMapRPMCommand());
-            // operator.y().whileTrue(pivot.runVolts(6));
-            // operator.a().whileTrue(pivot.runVolts(-6));
-            operator.rightTrigger().whileTrue(pivot.treeMapRPMCommand());
-            operator.leftTrigger().whileTrue(pivot.runToPositionCommand(15));
-            // operator.povUp().whileTrue(pivot.resetEncoder());
+            hood.setDefaultCommand(Commands.run(() -> hood.runToPosition(), hood));
+            // hood.setDefaultCommand(hood.treeMapRPMCommand());
+            operator.rightTrigger().whileTrue(hood.treeMapRPMCommand());
+            // operator.y().whileTrue(hood.runToPositionCommand(15));
+
+            test.y().whileTrue(hood.runVolts(2));
+            test.a().whileTrue(hood.runVolts(-2));
+            // operator.rightBumper().whileTrue(hood.runToPositionCommand(10));
+            // operator.povUp().whileTrue(hood.resetEncoder());
         
         /*
         Feeder Controls
@@ -312,27 +327,41 @@ public class RobotContainer {
         /*
         Intake
         */
-            driver.leftBumper().whileTrue(intake.runVolts(10.56));
+            // driver.leftBumper().whileTrue(intake.runVolts(10.8));
+            driver.leftTrigger().whileTrue(intake.runVolts(10.56));
             // driver.L1().whileTrue(intake.runVolts(12));
         
         /*
         Intake Pivot
         */
-            // intakePivot.setDefaultCommand(intakePivot.runVoltsJoystick(() -> operator.getLeftY()));
-            operator.leftBumper().whileTrue(intakePivot.runVolts(-6));
-            operator.rightBumper().whileTrue(intakePivot.runVolts(6));
+            intakePivot.setDefaultCommand(intakePivot.runVoltsJoystick(() -> operator.getRightY()*0.5));
+            // joystick.a().whileTrue(intakePivot.runSetpointCommand(0));
+            // joystick.a().whileTrue(intakePivot.runSetpointCommand(-100));
+            operator.leftBumper().whileTrue(intakePivot.runVolts(-6).alongWith(intake.runVolts(12)));
+            operator.rightBumper().whileTrue(intakePivot.runVolts(6).alongWith(intake.runVolts(12)));
+
+            
+            operator.a().whileTrue(intakePivot.goDown());
+            operator.x().whileTrue(intakePivot.bounce()).and(() -> intakePivot.up).whileTrue(intake.runVolts(6));
             // operator.L1().whileTrue(intakePivot.runVolts(-3));
             // operator.L2().whileTrue(intakePivot.runVolts(3));
             // operator.povUp().whileTrue(intakePivot.resetEncoder());
 
-
-        // // Run SysId routines when holding back/start and X/Y.
-        // // Note that each routine should be run exactly once in a single log.
-        // joystick.back().and(joystick.y()).whileTrue(swerve.sysIdDynamic(Direction.kForward));
-        // joystick.back().and(joystick.x()).whileTrue(swerve.sysIdDynamic(Direction.kReverse));
-        // joystick.start().and(joystick.y()).whileTrue(swerve.sysIdQuasistatic(Direction.kForward));
-        // joystick.start().and(joystick.x()).whileTrue(swerve.sysIdQuasistatic(Direction.kReverse));
-       
+        /*NamedCommands*/ 
+            NamedCommands.registerCommand("Intake",intake.runVolts(10.56));
+            NamedCommands.registerCommand("IntakePivot",intakePivot.runVolts(6).withTimeout(0.5));
+            NamedCommands.registerCommand("IntakePivotUp",intakePivot.runVolts(-6).withTimeout(0.2));
+            NamedCommands.registerCommand("Score",shooter.treeMapRPMCommand().alongWith(hood.treeMapRPMCommand()));
+            NamedCommands.registerCommand("ScoreEvent",shooter.treeMapRPMCommand().alongWith(hood.treeMapRPMCommand()));
+            NamedCommands.registerCommand("IntakeEvent",intake.runVolts(10.56));
+            NamedCommands.registerCommand("IntakePivotEvent",intakePivot.runVolts(6));
+            NamedCommands.registerCommand("IntakePivotUpEvent",intakePivot.runVolts(-6));
+            
+        /*Instances of EventMakers*/
+            // new EventMarker("IntakeEvent",1.0,1.28,NamedCommands.getCommand("Intake"));
+            // new EventMarker("IntakePivotEvent", 0,NamedCommands.getCommand("IntakePivot"));
+            // new EventMarker("ScoreEvent", 0.7, 1.95, NamedCommands.getCommand("Score"));
+            // new EventMarker("IntakePivotUpEvent", 0, NamedCommands.getCommand("IntakePivotUp"));
 
         swerve.registerTelemetry(logger::telemeterize);
 
@@ -361,35 +390,60 @@ public class RobotContainer {
 
     public void printAutons(){
         SmartDashboard.putData("Auton", a_chooser);
-        a_chooser.setDefaultOption("test", 1);
-        a_chooser.addOption("test", 1);
-        a_chooser.addOption("Shoot8", 2);
+        // a_chooser.setDefaultOption("test", 1);
+        // a_chooser.addOption("test", 1);
+        // a_chooser.addOption("Left_Center (dont run yet unless you wanna yolo)", 2);
+        a_chooser.addOption("Do Nothing", 1);
+        // a_chooser.addOption("Left_StopAtMiddle", 4);
+        // a_chooser.addOption("Right_StopAtMiddle", 5);
+        // a_chooser.addOption("Right_Center (dont run yet)", 6);
+        a_chooser.addOption("S_C_S_LEFT", 2);
         a_chooser.addOption("S_C_S", 3);
-        a_chooser.addOption("S_C_S_LEFT", 4);
-        a_chooser.addOption("BUMP_HP", 5);
-        a_chooser.addOption("OSMOSIS", 6);
-        a_chooser.addOption("MEIOSIS", 7);
+        a_chooser.addOption("Shoot8", 4);
+        a_chooser.addOption("OSMOSIS", 5);
+        a_chooser.addOption("MEIOSIS", 6);
+        a_chooser.addOption("Left_Middle2Cycle", 7);
+        a_chooser.addOption("Right_Middle2Cycle", 8);
+
     }
+    
 
 
     public Command getAutonomousCommand() {
         switch (a_chooser.getSelected()) {
+            // case 1:
+            //     return new test(swerve, robotState, shooter, intakePivot, intake, feeder, spindexer, hood, superstructure);
+
+            // case 2:
+            //     return new Left_Center(swerve, robotState, shooter, intakePivot, intake, feeder, spindexer, hood, superstructure);
+
             case 1:
-                return new Test(swerve, robotState, shooter, feeder, spindexer, pivot);
+                return new doNOTHING(swerve);
+
+            // case 4:
+            //     return new Left_StopAtMiddle(superstructure);
+
+            // case 5:
+            //     return new Right_StopAtMiddle(superstructure);
+                
+            // case 6:
+            //     return new Right_Center(swerve, robotState, shooter, intakePivot, intake, feeder, spindexer, hood, superstructure);
             case 2:
-                return new Shoot8(spindexer,feeder,shooter);
+                return new S_C_S_LEFT(spindexer, feeder, shooter, intake, hood, swerve, intakePivot);
             case 3:
-                return new S_C_S(spindexer, feeder, shooter, intake, intakePivot, pivot);
+                return new PathPlannerAuto("S_C_S");
             case 4:
-                return new S_C_S_LEFT(spindexer, feeder, shooter, intake, intakePivot, pivot);
+                return new Shoot8(spindexer, feeder, shooter);
             case 5:
-                return new BUMP_HP(spindexer, feeder, shooter, intake, intakePivot, pivot);
-            case 6:
                 return new PathPlannerAuto("OSMOSIS");
-            case 7:
+            case 6:
                 return new PathPlannerAuto("MEIOSIS");
+             case 7:
+                return new Left_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
+            case 8:
+                return new Right_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
             default:
-                 return new Test(swerve, robotState, shooter, feeder, spindexer, pivot);
+                return new doNOTHING(swerve);
 
         }
     }  

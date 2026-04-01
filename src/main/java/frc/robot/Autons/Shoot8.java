@@ -21,11 +21,7 @@ public class Shoot8 extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
 
     addCommands(
-      new ParallelCommandGroup(
-        NamedCommands.getCommand("Shoot"),
-        NamedCommands.getCommand("Pivot")
-
-      )
+     NamedCommands.getCommand("Score")
     );
 
     
