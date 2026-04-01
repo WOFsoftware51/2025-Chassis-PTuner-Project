@@ -48,20 +48,23 @@ import frc.robot.Autons.Shoot8;
 import frc.robot.Autons.test;
 import frc.robot.Autons.doNOTHING;
 import frc.robot.commands.MoveToAngle;
+import frc.robot.commands.factories.Superstructure;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.IntakePivotSubsystem;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.CANdle.CANdleCommand;
 import frc.robot.subsystems.CANdle.CANdleSubsystem;
 import frc.robot.subsystems.feeder.FeederIOHardware;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.feeder.FeederSubsystem;
+import frc.robot.subsystems.hood.HoodIOHardware;
+import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.hood.HoodSubsystem;
 import frc.robot.subsystems.intake.IntakeIOHardware;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.pivot.PivotIOHardware;
-import frc.robot.subsystems.pivot.PivotIOSim;
-import frc.robot.subsystems.pivot.PivotSubsystem;
+import frc.robot.subsystems.intakePivot.IntakePivotIOHardware;
+import frc.robot.subsystems.intakePivot.IntakePivotIOSim;
+import frc.robot.subsystems.intakePivot.IntakePivotSubsystem;
 import frc.robot.subsystems.shooter.ShooterIOHardware;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -113,7 +116,7 @@ public class RobotContainer {
     public final RobotState robotState = RobotState.getInstance();
     private final TurretSubsystem turret;
     private final ShooterSubsystem shooter;
-    private final PivotSubsystem pivot;
+    private final HoodSubsystem pivot;
     private final FeederSubsystem feeder;
     private final SpindexerSubsystem spindexer;
     private final IntakeSubsystem intake;
@@ -134,7 +137,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         this.intakePivot = new IntakePivotSubsystem(
-            
+            Robot.isReal() ? new IntakePivotIOHardware() : new IntakePivotIOSim()
         );
         this.limelightTurret = new VisionTurretSubsystem(
             //  new VisionIOHardware(Constants.VisionConstants.kTurretLimelight)
@@ -149,8 +152,8 @@ public class RobotContainer {
             Robot.isReal() ? new FeederIOHardware() : new FeederIOSim()
         );
 
-        this.pivot = new PivotSubsystem(
-            Robot.isReal() ? new PivotIOHardware() : new PivotIOSim(), 
+        this.pivot = new HoodSubsystem(
+            Robot.isReal() ? new HoodIOHardware() : new HoodIOSim(), 
             robotState
         );
         
@@ -164,7 +167,7 @@ public class RobotContainer {
             robotState
         );
 
-        this.swerve = TunerConstants.createDrivetrain(limelightTurret);
+        this.swerve = TunerConstants.createDrivetrain(limelightTurret, limelightChassis);
 
         this.intake = new IntakeSubsystem(
             Robot.isReal() ? new IntakeIOHardware() : new IntakeIOSim(swerve.mapleSimSwerveDrivetrain.mapleSimDrive)
