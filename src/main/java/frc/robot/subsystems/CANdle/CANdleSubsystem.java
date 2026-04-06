@@ -12,6 +12,7 @@ import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.configs.CANdleFeaturesConfigs;
@@ -33,6 +34,7 @@ import com.ctre.phoenix6.signals.StripTypeValue;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.subsystems.vision.LimelightHelpers;
 
 public class CANdleSubsystem extends SubsystemBase {
@@ -55,24 +57,28 @@ public class CANdleSubsystem extends SubsystemBase {
 
    public void purpleCANdle() 
   {  
-   CANdleONE.setControl(new SolidColor(0,20).withColor(kpurple));
+   CANdleONE.setControl(new SolidColor(0,32).withColor(kpurple));
+  }
+   public void test() 
+  {  
+   CANdleONE.setControl(new ColorFlowAnimation(0,32).withColor(kpurple));
   }
   public void whiteCANdle() 
   {  
-   CANdleONE.setControl(new SolidColor(0,20).withColor(kWhite));
+   CANdleONE.setControl(new SolidColor(0,32).withColor(kWhite));
   }
   public void greenCANdle() 
   {  
    CANdleONE.setControl(new SolidColor(0,20).withColor(kGreen));
   }
-   public void redCANdle() 
-  {  
-   CANdleONE.setControl(new SingleFadeAnimation(0,20).withSlot(0).withColor(kRed));
-  }
-  public void FireCANdle() 
-  {
-    m_FireAnimate = new FireAnimation(0, 20);
-  }
+  //  public void redCANdle() 
+  // {  
+  //  CANdleONE.setControl(new SingleFadeAnimation(0,20).withSlot(0).withColor(kRed));
+  // }
+  // public void FireCANdle() 
+  // {
+  //   m_FireAnimate = new FireAnimation(0, 20);
+  // }
  
   public void CANdle_off() 
   {
@@ -88,7 +94,7 @@ public class CANdleSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
 //      if (!DriverStation.isTeleop()) {
 //             // Actively set LED to a "not-teleop" state
-//              FireCANdle();
+//              purpleCANdle();
 //         } else {
 //             // Optional: Turn off or change behavior during Teleop
 //              whiteCANdle();
@@ -102,5 +108,6 @@ public class CANdleSubsystem extends SubsystemBase {
 //         // No Target: Red
 //         redCANdle();
 //     }
+SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
   }
 }

@@ -13,15 +13,21 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import com.ctre.phoenix6.HootAutoReplay;
+import com.ctre.phoenix6.configs.CANdleConfiguration;
+import com.ctre.phoenix6.controls.ColorFlowAnimation;
+import com.ctre.phoenix6.hardware.CANdle;
+import com.ctre.phoenix6.signals.RGBWColor;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.CANdle.CANdleSubsystem;
 
 public class Robot extends LoggedRobot {
     private Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
+    // private final CANdleSubsystem CANDLE;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -30,7 +36,7 @@ public class Robot extends LoggedRobot {
 
     public Robot() {
         m_robotContainer = new RobotContainer();
-
+        // CANDLE = new CANdleSubsystem();
         Logger.recordMetadata("FRC-2026", "MyProject"); 
 
         if (isReal()) { //REAL
@@ -49,7 +55,6 @@ public class Robot extends LoggedRobot {
         }
         Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
     }
-
     @Override
     public void robotPeriodic() {
         m_timeAndJoystickReplay.update();
@@ -72,23 +77,28 @@ public class Robot extends LoggedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+        // CANDLE.test();
     }
 
     @Override
-    public void autonomousPeriodic() {}
+    public void autonomousPeriodic() {
+    }
 
     @Override
-    public void autonomousExit() {}
+    public void autonomousExit() {
+    }
 
     @Override
     public void teleopInit() {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
+        // CANDLE.whiteCANdle();
     }
 
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+    }
 
     @Override
     public void teleopExit() {}

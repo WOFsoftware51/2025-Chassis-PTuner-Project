@@ -51,13 +51,14 @@ public class Superstructure {
     public Command shoot() {
         return Commands.parallel(
             shooter.treeMapRPMCommand(), 
-            Commands.sequence(
-                Commands.waitUntil(() -> shooter.atRPM), 
-                Commands.parallel(
-                    feeder.run(), 
-                    spindexer.run()
-                )
-            )
+            hood.treeMapRPMCommand()
+            // Commands.sequence(
+            //     Commands.waitUntil(
+            //     Commands.parallel(
+            //         feeder.run(), 
+            //         spindexer.run()
+            //     )
+            // )
         );
         
     }

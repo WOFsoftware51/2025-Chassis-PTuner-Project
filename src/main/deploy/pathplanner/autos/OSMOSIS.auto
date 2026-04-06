@@ -7,25 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "OS_TR_C"
+            "pathName": null
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "OS_C_BUMP"
+            "pathName": null
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "OS_TR_C"
+            "pathName": null
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "OS_C_BUMP"
+            "pathName": null
           }
         }
       ]

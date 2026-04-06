@@ -3,48 +3,53 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 6.295,
-        "y": 2.779
+        "x": 6.295298013245033,
+        "y": 2.7790314569536427
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.959622580764854,
-        "y": 1.4131164672134504
+        "x": 6.959799469356774,
+        "y": 1.413396850661454
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Pickup2"
     },
     {
       "anchor": {
-        "x": 6.295,
+        "x": 6.295298013245033,
         "y": 0.65
       },
       "prevControl": {
-        "x": 6.544910403813528,
-        "y": 0.6566925380655845
+        "x": 6.5452083979849895,
+        "y": 0.6566932502662783
       },
       "nextControl": {
-        "x": 4.991467333708637,
-        "y": 0.6150917214499119
+        "x": 4.991985929909232,
+        "y": 0.6150939117319666
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Center2"
     },
     {
       "anchor": {
-        "x": 3.537,
+        "x": 3.536523178807947,
         "y": 0.65
       },
       "prevControl": {
-        "x": 3.9117783612591266,
-        "y": 0.6628910795484096
+        "x": 3.9115648093755992,
+        "y": 0.6628987131074998
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Shoot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -64,7 +69,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

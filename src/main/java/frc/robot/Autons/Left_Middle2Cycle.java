@@ -64,7 +64,7 @@ public class Left_Middle2Cycle extends SequentialCommandGroup {
         Commands.race(
           AutoBuilder.followPath(LeftTrench_Center6), //go to center
           Commands.sequence(
-            Commands.waitSeconds(0.25),
+            Commands.waitSeconds(0.5),
             intakePivot.goDown(), 
             intake.runVolts(10.8)
           )
@@ -83,9 +83,12 @@ public class Left_Middle2Cycle extends SequentialCommandGroup {
 
 
         Commands.parallel(
-          AutoBuilder.followPath(LeftTrench_Center26), //go to center
+          Commands.race(
+            AutoBuilder.followPath(LeftTrench_Center26),
+            hood.runToPositionCommand(0)
+          ),
           Commands.sequence(
-            Commands.waitSeconds(0.5),
+            Commands.waitSeconds(0.25),
             intakePivot.goDown()
           )
         ),

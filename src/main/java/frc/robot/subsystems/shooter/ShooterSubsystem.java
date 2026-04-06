@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,16 +34,19 @@ public class ShooterSubsystem extends SubsystemBase {
     public boolean atRPM = false;
     public double chassisShootingSpeed = 1.0;
 
+    private double autonOffset = 0;
+
     public ShooterSubsystem(ShooterIO io) {
         this.io = io;
 
-        treeMap.put(Inches.of(80.982223).in(Meters), 2350.0);
-        treeMap.put(Inches.of(100.5).in(Meters), 2450.0);
-        treeMap.put(Inches.of(120.0).in(Meters), 2500.0);
-        treeMap.put(Inches.of(140.9).in(Meters), 2600.0);
-        treeMap.put(Inches.of(160.15).in(Meters), 2700.0);
-        treeMap.put(Inches.of(180.4).in(Meters), 2800.0);
-        treeMap.put(Inches.of(204.16).in(Meters), 2950.0);
+        treeMap.put(Inches.of(68.2).in(Meters), 2175.0);
+        treeMap.put(Inches.of(87.4).in(Meters), 2350.0);
+        treeMap.put(Inches.of(107.0).in(Meters), 2600.0);
+        treeMap.put(Inches.of(127.0).in(Meters), 2850.0);
+        treeMap.put(Inches.of(147.6).in(Meters), 3000.0);
+        treeMap.put(Inches.of(166.6).in(Meters), 2900.0);
+        treeMap.put(Inches.of(184.0).in(Meters), 2900.0);
+        treeMap.put(Inches.of(208.0).in(Meters), 2925.0);
     }
 
     public Supplier<Double> getChassisShootingSpeed() {
@@ -72,7 +76,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
         if(inputs.currentVelocity.in(RPM)>100) {
-            chassisShootingSpeed = 0.25;
+            chassisShootingSpeed = 0.5;
         }
         else {
             chassisShootingSpeed = 1.0;
@@ -85,6 +89,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
         Logger.recordOutput("Shooter/TreeMap Angle", treeMap.get(Double.valueOf(RobotState.getInstance().getDistanceFromHubMeters())));
 
+        if(DriverStation.isAutonomous()) {
+            autonOffset = 50;
+        }
+        else {
+            autonOffset = 0;
+        }
     }
 
     public Command treeMapRPMCommand() {
@@ -97,6 +107,8 @@ public class ShooterSubsystem extends SubsystemBase {
                                 RobotState.getInstance().getDistanceFromHubMeters()
                             )
                         )
+                        +
+                        autonOffset
                     )
                 );
 

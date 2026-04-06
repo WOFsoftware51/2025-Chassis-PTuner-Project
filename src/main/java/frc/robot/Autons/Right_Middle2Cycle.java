@@ -64,7 +64,7 @@ public class Right_Middle2Cycle extends SequentialCommandGroup {
         Commands.race(
           AutoBuilder.followPath(RightTrench_Center), //go to center
           Commands.sequence(
-            Commands.waitSeconds(0.25),
+            Commands.waitSeconds(0.5),
             intakePivot.goDown(), 
             intake.runVolts(10.8)
           )
@@ -83,13 +83,16 @@ public class Right_Middle2Cycle extends SequentialCommandGroup {
 
 
         Commands.parallel(
-          AutoBuilder.followPath(RightTrench_Center2), //go to center
+          Commands.race(
+            AutoBuilder.followPath(RightTrench_Center2),
+            hood.runToPositionCommand(0)
+          ),
           Commands.sequence(
-            Commands.waitSeconds(0.5),
+            Commands.waitSeconds(0.25),
             intakePivot.goDown()
           )
         ),
-        AutoBuilder.followPath(RightCenter_Pickup2).raceWith(intake.runVolts(10.8)), //pickup and intake again
+        AutoBuilder.followPath(RightCenter_Pickup2).raceWith(intake.runVolts(10.56)), //pickup and intake again
         AutoBuilder.followPath(RightPickUp_RightTrench2), //go to shoot position again
         Commands.race( //shoot again
           superstructure.shoot(),

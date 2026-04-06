@@ -23,14 +23,14 @@ public class HoodSubsystem extends SubsystemBase{
         this.io = io;
         this.robotState = robotState;
 
-        treeMap.put(Inches.of(80.982223).in(Meters), 4.0);
-        treeMap.put(Inches.of(100.5).in(Meters), 6.0);
-        treeMap.put(Inches.of(110.0).in(Meters), 7.0);
-        treeMap.put(Inches.of(120.0).in(Meters), 10.0);
-        treeMap.put(Inches.of(140.9).in(Meters), 12.0);
-        treeMap.put(Inches.of(160.15).in(Meters), 14.0);
-        treeMap.put(Inches.of(180.4).in(Meters), 16.0);
-        treeMap.put(Inches.of(204.16).in(Meters), 18.0);
+        treeMap.put(Inches.of(68.2).in(Meters), 2.0);
+        treeMap.put(Inches.of(87.4).in(Meters), 2.0);
+        treeMap.put(Inches.of(107.0).in(Meters), 3.0);
+        treeMap.put(Inches.of(127.0).in(Meters), 3.0);
+        treeMap.put(Inches.of(147.6).in(Meters), 4.0);
+        treeMap.put(Inches.of(166.6).in(Meters), 8.0);
+        treeMap.put(Inches.of(184.0).in(Meters), 10.0);
+        treeMap.put(Inches.of(208.0).in(Meters), 12.0);
 
     }
 

@@ -48,6 +48,7 @@ import frc.robot.Autons.Shoot8;
 import frc.robot.Autons.test;
 import frc.robot.Autons.doNOTHING;
 import frc.robot.commands.MoveToAngle;
+import frc.robot.commands.TurretCameraPoseDefaultCommand;
 import frc.robot.commands.factories.Superstructure;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve;
@@ -84,9 +85,9 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 public class RobotContainer {
-    public double Speedmodifier = 0.7;
+    public double Speedmodifier = 0.5;
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity: 0.8435211984 RPS
+    private double MaxAngularRate = 0.5 * RotationsPerSecond.of(1.2).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity: 0.8435211984 RPS
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -116,7 +117,7 @@ public class RobotContainer {
     public final RobotState robotState = RobotState.getInstance();
     private final TurretSubsystem turret;
     private final ShooterSubsystem shooter;
-    private final HoodSubsystem pivot;
+    private final HoodSubsystem hood;
     private final FeederSubsystem feeder;
     private final SpindexerSubsystem spindexer;
     private final IntakeSubsystem intake;
@@ -152,7 +153,7 @@ public class RobotContainer {
             Robot.isReal() ? new FeederIOHardware() : new FeederIOSim()
         );
 
-        this.pivot = new HoodSubsystem(
+        this.hood = new HoodSubsystem(
             Robot.isReal() ? new HoodIOHardware() : new HoodIOSim(), 
             robotState
         );
@@ -202,7 +203,7 @@ public class RobotContainer {
                 )
             );
             new Trigger(driver.rightTrigger()).onTrue(Commands.runOnce(() -> {Speedmodifier = 1.0;}));
-            new Trigger(driver.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.5;}));
+            new Trigger(driver.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.4;}));
             //new Trigger(operator.rightTrigger()).onTrue(Commands.runOnce(() -> {Speedmodifier = 0.1;}));
             //new Trigger(operator.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.5;}));
 
@@ -262,7 +263,7 @@ public class RobotContainer {
         /*
         Turret Controls
         */
-            // turret.setDefaultCommand(new TurretCameraPoseDefaultCommand(turret));
+        turret.setDefaultCommand(new TurretCameraPoseDefaultCommand(turret));
             // turret.setDefaultCommand(turret.TurretToSetpointCommand(Degrees.of(turretAngle.get())));
             // operator.b().whileTrue(turret.TurretRunWithVolts(Volts.of(-3))); //To the right
             // operator.x().whileTrue(turret.TurretRunWithVolts(Volts.of(3))); //To the left
@@ -370,18 +371,18 @@ public class RobotContainer {
 
 
     NamedCommands.registerCommand("Shoot",shooter.treeMapRPMCommand().withTimeout(2.5));
-    NamedCommands.registerCommand("Pivot",pivot.treeMapRPMCommand().withTimeout(2.5));
+    NamedCommands.registerCommand("Pivot",hood.treeMapRPMCommand().withTimeout(2.5));
     NamedCommands.registerCommand("IntakePivot",intakePivot.runVolts(6).withTimeout(0.7));
     NamedCommands.registerCommand("IntakePivotUp", intakePivot.runVolts(-6).withTimeout(0.53));
     NamedCommands.registerCommand("Intake", intake.runVolts(10.56));
     NamedCommands.registerCommand("ShootMore",shooter.treeMapRPMCommand().withTimeout(5));
-    NamedCommands.registerCommand("PivotMore",pivot.treeMapRPMCommand().withTimeout(5));
+    NamedCommands.registerCommand("PivotMore",hood.treeMapRPMCommand().withTimeout(5));
     
     new EventMarker("IntakePivotEvent", 0,intakePivot.runVolts(6).withTimeout(0.7));
     new EventMarker("IntakePivotUpEvent", 0,intakePivot.runVolts(-6).withTimeout(0.53));
     new EventMarker("IntakeEvent", 2,1.28,intake.runVolts(10.56));
     new EventMarker("ShootEvent", 0.70,1.95,shooter.treeMapRPMCommand());
-    new EventMarker("PivotEvent", 0.70,1.95,pivot.treeMapRPMCommand());
+    new EventMarker("PivotEvent", 0.70,1.95,hood.treeMapRPMCommand());
 
     // NamedCommands.registerCommand("Spin", spindexer.runSpindexerVoltsCommand(12.0));
     // NamedCommands.registerCommand("Feed", feeder.runFeederVoltsCommand(12));
@@ -407,7 +408,8 @@ public class RobotContainer {
         a_chooser.addOption("MEIOSIS", 6);
         a_chooser.addOption("Left_Middle2Cycle", 7);
         a_chooser.addOption("Right_Middle2Cycle", 8);
-
+        a_chooser.addOption("Right_StopAtMiddle", 9);
+        a_chooser.addOption("Left_StopAtMiddle", 10);
     }
     
 
@@ -445,6 +447,10 @@ public class RobotContainer {
                 return new Left_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
             case 8:
                 return new Right_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
+            case 9:
+                return new Right_StopAtMiddle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
+            case 10:
+                return new Left_StopAtMiddle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
             default:
                 return new doNOTHING(swerve);
 

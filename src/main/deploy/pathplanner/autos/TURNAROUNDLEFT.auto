@@ -7,25 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": null
+            "pathName": "LeftTrench_Center10"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": null
+            "pathName": "TurnAround10"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": null
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": null
+            "pathName": "SHOOTLEFT10"
           }
         }
       ]

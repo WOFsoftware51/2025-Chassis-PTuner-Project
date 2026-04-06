@@ -20,15 +20,9 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.MutAngle;
-import edu.wpi.first.units.measure.MutAngularAcceleration;
-import edu.wpi.first.units.measure.MutAngularVelocity;
-import edu.wpi.first.units.measure.MutCurrent;
-import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
-import frc.robot.util.LoggedTunableNumber;
 
 public class IntakePivotIOHardware implements IntakePivotIO{
     private TalonFX motor = new TalonFX(Constants.IntakePivotConstants.kMotorID, Constants.kCANIvoreName);
@@ -100,7 +94,7 @@ public class IntakePivotIOHardware implements IntakePivotIO{
         inputs.supplyCurrent.mut_replace(motor.getSupplyCurrent().getValue());
         inputs.torqueCurrent.mut_replace(motor.getTorqueCurrent().getValue());
 
-        inputs.canCoderPosition.mut_replace(cancoder.getPosition().getValue());
+        inputs.canCoderPosition.mut_replace(getCANCoderRotations(), Rotations);
 
         inputs.limitSwitchBoolean = getLimitSwitch();
     }
@@ -119,8 +113,8 @@ public class IntakePivotIOHardware implements IntakePivotIO{
     @Override
     public void runSetpoint(Angle degrees) {
         this.target = degrees.in(Degrees);
-        this.motion.withPosition(target).withEnableFOC(true);
-        motor.setControl(this.motion.withLimitForwardMotion(getLimitSwitch()));
+        this.motion.withPosition(target).withEnableFOC(true).withLimitForwardMotion(getLimitSwitch());
+        motor.setControl(this.motion);
     }
 
 

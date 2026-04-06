@@ -43,6 +43,8 @@ public class RobotState {
 
     private Pose2d chassisLimelightMegaTag2 = new Pose2d();
 
+    private double hubToTurret;
+    private double hubToTurretFuture;
     private Translation3d robotToTurreTranslation3d = 
         new Translation3d(
             Inches.of(-5.5), 
@@ -167,12 +169,22 @@ public class RobotState {
         double angleDegrees = angleRadians.in(Degree);
         return Degrees.of(angleDegrees);
     }
+    public Angle getRobotToAllianceHubDegrees(Pose2d pose) {
+        double yError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getY() - pose.getY();
+        double xError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getX() - pose.getX();
+        Angle angleRadians = Radians.of(Math.atan2(yError,xError));
+        double angleDegrees = angleRadians.in(Degree) - 90;
+        return Degrees.of(angleDegrees);
+    }
 
-    /**
-     * Error from the front of the robot to the hub
-     * 
-     * @return Angle in Degrees
-     */
+    public Angle getRobotToAllianceHubDegrees(double x, double y) {
+        double yError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getY() - y;
+        double xError = Constants.PoseConstants.kCurrentAllianceHubTarget.get().getX() - x;
+        Angle angleRadians = Radians.of(Math.atan2(yError,xError));
+        double angleDegrees = angleRadians.in(Degree) + 90;
+        return Degrees.of(angleDegrees);
+    }
+
     public Angle getTurretToAllianceHubDegrees() {
         
         Translation2d transform = new Translation2d(Inches.of(-7.75).in(Meters), Inches.of(5.5).in(Meters));
@@ -325,5 +337,11 @@ public class RobotState {
         Logger.recordOutput("RobotState/getDistanceFromHubMeters", distance);
 
         return distance;
+    }
+    public void setTurretToHub(double distance) {
+        this.hubToTurret = distance;
+    }
+    public double getTurretToHub() {
+        return this.hubToTurret;
     }
 }
