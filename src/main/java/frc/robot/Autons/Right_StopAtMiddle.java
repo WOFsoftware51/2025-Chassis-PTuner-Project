@@ -9,6 +9,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.Paths10;
 import frc.robot.RobotState;
 import frc.robot.commands.factories.Superstructure;
 import frc.robot.subsystems.Swerve;
@@ -35,7 +36,8 @@ public class Right_StopAtMiddle extends SequentialCommandGroup {
       FeederSubsystem feeder, 
       SpindexerSubsystem spindexer, 
       HoodSubsystem hood, 
-      Superstructure superstructure
+      Superstructure superstructure,
+      Paths10 path
   ) 
   {
     PathPlannerPath RightTrench_Center;
@@ -52,22 +54,22 @@ public class Right_StopAtMiddle extends SequentialCommandGroup {
       RightCenter_Pickup2 = PathPlannerPath.fromPathFile("RightCenter_Pickup2");
 
       addCommands(
-        AutoBuilder.resetOdom(RightTrench_Center.getStartingHolonomicPose().get()), 
-        Commands.parallel(
-          AutoBuilder.followPath(emptyRightTrench),
-          shooter.runRPMCommand(3000).withTimeout(0.05), 
-          Commands.run(() -> turret.turretCameraAimToHub(), turret).withTimeout(0.02)
-        ),
+        AutoBuilder.resetOdom(path.RightTrench_Center.getStartingHolonomicPose().get()), 
+        // Commands.parallel(
+        //   AutoBuilder.followPath(Paths.emptyRightTrench),
+        //   shooter.runRPMCommand(3000).withTimeout(0.05), 
+        //   Commands.run(() -> turret.turretCameraAimToHub(), turret).withTimeout(0.02)
+        // ),
         Commands.race(
-          AutoBuilder.followPath(RightTrench_Center), //go to center
+          AutoBuilder.followPath(path.RightTrench_Center), //go to center
           Commands.sequence(
-            Commands.waitSeconds(0.5),
+            Commands.waitSeconds(0.25),
             intakePivot.goDown(), 
             Commands.waitSeconds(5)
           ),
           intake.runVolts(10.8)
         ), 
-        AutoBuilder.followPath(RightPickUp_RightTrenchMoreCenter), //go to shoot position
+        AutoBuilder.followPath(path.RightPickUp_RightTrenchMoreCenter), //go to shoot position
         Commands.race( //shoot
           Commands.sequence(
             Commands.waitSeconds(1.0),
@@ -82,16 +84,16 @@ public class Right_StopAtMiddle extends SequentialCommandGroup {
         ), 
         Commands.parallel(
           Commands.race(
-            AutoBuilder.followPath(RightTrenchMoreCenter_Center2), //go to center
+            AutoBuilder.followPath(path.RightTrenchMoreCenter_Center2), //go to center
             hood.runToPositionCommand(0)
           ),
           Commands.sequence(
-            Commands.waitSeconds(0.25),
+            Commands.waitSeconds(0.5),
             intakePivot.goDown()
           )
         ),
         Commands.race(
-          AutoBuilder.followPath(RightCenter_Pickup2), //go to center
+          AutoBuilder.followPath(path.RightCenter_Pickup2), //go to center
           Commands.sequence(
             intakePivot.goDown(), 
             Commands.waitSeconds(5)

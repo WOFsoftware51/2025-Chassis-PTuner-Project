@@ -22,9 +22,12 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class RobotState {
@@ -45,7 +48,7 @@ public class RobotState {
 
     private double hubToTurret;
     private double hubToTurretFuture;
-    private Translation3d robotToTurreTranslation3d = 
+    private Translation3d robotToTurretTranslation3d = 
         new Translation3d(
             Inches.of(-5.5), 
             Inches.of(-7.75), 
@@ -53,7 +56,7 @@ public class RobotState {
         );  
     
     private Transform3d robotToTurret = new Transform3d(
-        robotToTurreTranslation3d,
+        robotToTurretTranslation3d,
         new Rotation3d(
             0,
             0,
@@ -72,7 +75,7 @@ public class RobotState {
         ),
         new Rotation3d(  //TODO
             Degrees.of(0), 
-            Degrees.of(14.5), 
+            Degrees.of(14), 
             Degrees.of(0)
         )
     );
@@ -84,15 +87,34 @@ public class RobotState {
 
     private double mt2TimeStampChassis;
 
+    InterpolatingDoubleTreeMap timeOfFlight = new InterpolatingDoubleTreeMap();
+
     private RobotState() {
+        timeOfFlight.put(Inches.of(68.2).in(Meters), 0.97);
+        timeOfFlight.put(Inches.of(87.4).in(Meters), 0.65);
+        timeOfFlight.put(Inches.of(107.0).in(Meters), 1.16);
+        timeOfFlight.put(Inches.of(127.0).in(Meters), 1.26);
+        timeOfFlight.put(Inches.of(147.6).in(Meters), 1.4);
+        timeOfFlight.put(Inches.of(166.6).in(Meters), 1.31);
+        timeOfFlight.put(Inches.of(184.0).in(Meters), 1.37);
     
     }
+
+
+     public static enum Targets {
+        Hub, 
+        Feed, 
+        Locked
+    }
+
+    public Targets currentTarget = Targets.Hub;
+
 
 
     public void setPose2d(Pose2d pose) {
         this.pose2d = pose;
     }
-    
+
     public Pose2d getPose2d() {
         return this.pose2d;
     }   
@@ -100,7 +122,6 @@ public class RobotState {
     public Supplier<Pose2d> getPose2dSupplier() {
         return () -> this.pose2d;
     }   
-
     /**
      * Generates a circle of points from a Pose2d
      * 
@@ -204,7 +225,7 @@ public class RobotState {
 
     public void setChassisSpeeds(ChassisSpeeds robotChassisSpeeds, ChassisSpeeds fieldRelativeChassisSpeeds) {
         this.robotChassisSpeeds = robotChassisSpeeds;
-        fieldRelativeChassisSpeeds = this.fieldRelativeChassisSpeeds;
+        this.fieldRelativeChassisSpeeds = fieldRelativeChassisSpeeds;
     }
     public ChassisSpeeds getChassisSpeeds() {
         return robotChassisSpeeds;
@@ -228,6 +249,25 @@ public class RobotState {
         return chassisLimelightMegaTag2;
     }
 
+    private TimeInterpolatableBuffer<Double> turretTimeStamp2 = TimeInterpolatableBuffer.createDoubleBuffer(1);
+    public void setTurretTimeStamp(double timeStamp, double angle) {
+        turretTimeStamp2.addSample(timeStamp, angle);
+        double currentTime = Timer.getFPGATimestamp();
+        double lastSeenTimeStamp = 0.0;
+        double timeWithout = 0.0;
+        if(timeWithout < 1) {
+            timeWithout = currentTime - lastSeenTimeStamp;
+        }
+        else {
+            turretTimeStamp2.clear();
+            lastSeenTimeStamp = Timer.getFPGATimestamp(); 
+            currentTime = lastSeenTimeStamp;
+            timeWithout = 0.0;
+        }
+    }
+    public double getTurretTimeStamp(double timeStamp) {  
+        return turretTimeStamp2.getSample(timeStamp).get();
+    }
     
     // InterpolatingTreeMap<Double, Rotation2d> turretEncoderAtTimeStamp;;
 
@@ -236,33 +276,33 @@ public class RobotState {
     //     turretEncoderAtTimeStamp.clear();
     // }
 
-    TreeMap<Double, Rotation2d> turretTimeStamp = new TreeMap<>();
-    public void setTurretTimeStamp(double timeStamp, double angle) {
-        turretTimeStamp.put(timeStamp, new Rotation2d(Units.degreesToRadians(angle)));
-        turretTimeStamp.headMap(timeStamp-1).clear();
-    }
+    // TreeMap<Double, Rotation2d> turretTimeStamp = new TreeMap<>();
+    // public void setTurretTimeStamp(double timeStamp, double angle) {
+    //     turretTimeStamp.put(timeStamp, new Rotation2d(Units.degreesToRadians(angle)));
+    //     turretTimeStamp.headMap(timeStamp-1).clear();
+    // }
 
-    public double getTurretTimeStamp(double timeStamp) {  
-        var floor = turretTimeStamp.floorEntry(timeStamp);
-        var ceiling = turretTimeStamp.ceilingEntry(timeStamp);
+    // public double getTurretTimeStamp(double timeStamp) {  
+    //     var floor = turretTimeStamp.floorEntry(timeStamp);
+    //     var ceiling = turretTimeStamp.ceilingEntry(timeStamp);
         
-        if(floor == null && ceiling == null) {
-            return 0;
-        }
-        else if(floor == null) {
-            return ceiling.getValue().getDegrees();
-        }
-        else if(ceiling == null) {
-            return floor.getValue().getDegrees();
-        }
+    //     if(floor == null && ceiling == null) {
+    //         return 0;
+    //     }
+    //     else if(floor == null) {
+    //         return ceiling.getValue().getDegrees();
+    //     }
+    //     else if(ceiling == null) {
+    //         return floor.getValue().getDegrees();
+    //     }
 
-        double timeDif = ceiling.getKey() - floor.getKey();
-        if(timeDif <= Double.MIN_VALUE) return floor.getValue().getDegrees();
+    //     double timeDif = ceiling.getKey() - floor.getKey();
+    //     if(timeDif <= Double.MIN_VALUE) return floor.getValue().getDegrees();
 
-        double percentDone = (timeStamp - floor.getValue().getDegrees()) / timeDif;
+    //     double percentDone = (timeStamp - floor.getValue().getDegrees()) / timeDif;
 
-        return MathUtil.interpolate(floor.getValue().getDegrees(), ceiling.getValue().getDegrees(), percentDone);
-    }
+    //     return MathUtil.interpolate(floor.getValue().getDegrees(), ceiling.getValue().getDegrees(), percentDone);
+    // }
 
 
     public void setTurretLimelightMegaTag2(Pose2d pose2d) {
@@ -292,7 +332,7 @@ public class RobotState {
 
     public void setRobotToTurret(double turretYawDegrees) {
         robotToTurret = new Transform3d(
-            robotToTurreTranslation3d,
+            robotToTurretTranslation3d,
             new Rotation3d(  //TODO
                 Degrees.of(0), 
                 Degrees.of(0), 
@@ -338,10 +378,28 @@ public class RobotState {
 
         return distance;
     }
-    public void setTurretToHub(double distance) {
+    public void setTurretToHub(double distance, double futureDistance) {
         this.hubToTurret = distance;
+        this.hubToTurretFuture = futureDistance;
     }
-    public double getTurretToHub() {
+    public double 
+    getTurretToHub() {
         return this.hubToTurret;
+    }
+
+    public double getFutureTurretToHub() {
+        return hubToTurretFuture;
+    }
+
+    
+    public double getTimeOfFlight() {
+        return timeOfFlight.get(getTurretToHub());
+    }
+
+    public void setCurrentTarget(Targets target) {
+        currentTarget = target;
+    }
+    public Targets getCurrentTarget() {
+        return currentTarget;
     }
 }

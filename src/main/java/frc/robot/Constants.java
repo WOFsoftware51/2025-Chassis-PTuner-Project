@@ -96,6 +96,20 @@ public final class Constants {
     public static Supplier<Pose2d> kCurrentAllianceHubTarget = 
       () -> getAllianceColor() == Alliance.Blue ? kHubTargetBlue : kHubTargetRed;
 
+  
+  
+    private static final Pose2d kRightStationTargetBlue = new Pose2d(1.598, 1.523, new Rotation2d());
+    private static final Pose2d kRightStationTargetRed = new Pose2d(14.811, 6.663, new Rotation2d());
+
+    public static Supplier<Pose2d> kCurrentAllianceRightStationTarget = 
+      () -> getAllianceColor() == Alliance.Blue ? kRightStationTargetBlue : kRightStationTargetRed;
+
+    
+    private static final Pose2d kLeftStationTargetBlue = new Pose2d(1.598, 6.663, new Rotation2d());
+    private static final Pose2d kLeftStationTargetRed = new Pose2d(14.811, 1.523, new Rotation2d());
+
+    public static Supplier<Pose2d> kCurrentAllianceLeftStationTarget = 
+      () -> getAllianceColor() == Alliance.Blue ? kLeftStationTargetBlue : kLeftStationTargetRed;
   }
   
   public static final class AutoConstants {
@@ -161,7 +175,7 @@ public final class Constants {
     public static final double kGearRatio = 320.0;
     public static final double kCANCoderGearRatio = 9.0;
 
-    public static final double kCANCoderOffset = -0.389;
+    public static final double kCANCoderOffset = -0.362;
 
 
     public static final double kForwardLimit = 21;
@@ -188,17 +202,5 @@ public final class Constants {
   }
 
 
-private boolean shooting = false;
-private static Constants instance = new Constants();
-
- public static Constants getInstance() {
-        return instance;
-    }
-    public void setShooting(boolean isshooting) {
-        this.shooting = isshooting;
-    }
-     public boolean getShooting() {
-        return shooting;
-    }
 
 }

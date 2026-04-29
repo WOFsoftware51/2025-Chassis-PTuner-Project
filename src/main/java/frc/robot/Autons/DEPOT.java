@@ -4,12 +4,15 @@
 
 package frc.robot.Autons;
 
-import com.pathplanner.lib.auto.AutoBuilder;
+import java.nio.file.Paths;
 
-import edu.wpi.first.wpilibj.RobotState;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Paths10;
+import frc.robot.RobotState;
 import frc.robot.commands.factories.Superstructure;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.feeder.FeederSubsystem;
@@ -23,10 +26,10 @@ import frc.robot.subsystems.turret.TurretSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Shoot8 extends SequentialCommandGroup {
-  /** Creates a new test. */
-  public Shoot8(
-     Swerve swerve, 
+public class DEPOT extends SequentialCommandGroup {
+  /** Creates a new Right_Middle2Cycle. */
+  public DEPOT(
+      Swerve swerve, 
       RobotState robotState, 
       ShooterSubsystem shooter, 
       TurretSubsystem turret, 
@@ -35,16 +38,24 @@ public class Shoot8 extends SequentialCommandGroup {
       FeederSubsystem feeder, 
       SpindexerSubsystem spindexer, 
       HoodSubsystem hood, 
-      Superstructure superstructure, 
+      Superstructure superstructure,
       Paths10 path
-  ) {
-    // Add your commands in the addCommands() call, e.g.
-    // addCommands(new FooCommand(), new BarCommand());
+  ) 
+  {
 
-    addCommands(
-     Commands.parallel(
-        AutoBuilder.followPath(path.emptycenter),
-        shooter.runRPMCommand(3000).withTimeout(0.05)
+    try {
+      addCommands(
+        AutoBuilder.resetOdom(path._Depot.getStartingHolonomicPose().get()),
+        Commands.parallel(
+          AutoBuilder.followPath(path.emptyBump),
+          shooter.runRPMCommand(3000).withTimeout(0.05)
+        ),
+        Commands.race(
+          AutoBuilder.followPath(path._Depot), //intake depot balls
+          Commands.sequence(
+            intakePivot.goDown(), 
+            intake.runVolts(10.8)
+          )
         ),
         Commands.race( //shoot
           superstructure.shoot(),
@@ -55,8 +66,14 @@ public class Shoot8 extends SequentialCommandGroup {
           ),
           Commands.waitSeconds(5)
         )
-    );
 
-    
+          
+      );
+
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+    }  
+
   }
 }

@@ -45,7 +45,6 @@ public class ShooterIOHardware implements ShooterIO{
         configs.CurrentLimits.StatorCurrentLimitEnable = true;
         configs.CurrentLimits.StatorCurrentLimit = 180;
 
-
         motorLeft.getConfigurator().apply(configs);
 
         motorRight.setControl(new Follower(Constants.ShooterConstants.kMotorLeftID, MotorAlignmentValue.Opposed));

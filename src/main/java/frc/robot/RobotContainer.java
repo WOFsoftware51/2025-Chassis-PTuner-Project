@@ -4,16 +4,15 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.IOException;
 
-import static edu.wpi.first.units.Units.Volts;
+import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -21,30 +20,40 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.EventMarker;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.util.FileVersionException;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.RobotState.Targets;
 import frc.robot.Autons.AutoPath;
+import frc.robot.Autons.Center_2;
+import frc.robot.Autons.Center_3;
+import frc.robot.Autons.DEPOT;
+import frc.robot.Autons.Left_2_Sweeps;
 import frc.robot.Autons.Left_Center;
 import frc.robot.Autons.Left_Middle2Cycle;
 import frc.robot.Autons.Left_StopAtMiddle;
 import frc.robot.Autons.MEIOSIS;
+import frc.robot.Autons.Middle_Depot;
 import frc.robot.Autons.OSMOSIS;
+import frc.robot.Autons.Right_2_Sweeps;
 import frc.robot.Autons.Right_Center;
 import frc.robot.Autons.Right_Middle2Cycle;
 import frc.robot.Autons.Right_StopAtMiddle;
 import frc.robot.Autons.S_C_S;
 import frc.robot.Autons.S_C_S_LEFT;
 import frc.robot.Autons.Shoot8;
+import frc.robot.Autons.TURNAROUNDLEFT;
 import frc.robot.Autons.test;
 import frc.robot.Autons.doNOTHING;
 import frc.robot.commands.MoveToAngle;
@@ -80,12 +89,10 @@ import frc.robot.subsystems.vision.VisionIOHardware;
 import frc.robot.subsystems.vision.VisionIOSim;
 import frc.robot.subsystems.vision.VisionTurretSubsystem;
 import frc.robot.util.LoggedTunableNumber;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 // Optional: If you need wait until a specific time in the match
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 public class RobotContainer {
-    public double Speedmodifier = 0.5;
+    public double Speedmodifier = 0.6;
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = 0.5 * RotationsPerSecond.of(1.2).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity: 0.8435211984 RPS
 
@@ -124,6 +131,8 @@ public class RobotContainer {
     private final IntakePivotSubsystem intakePivot;
     private final Superstructure superstructure;
     private final CANdleSubsystem cANdle;
+	
+    private final Paths10 path;
     private boolean operatorRumble = false;
 
     LoggedTunableNumber speedLeft = new LoggedTunableNumber("Pose/speedLeft", 5);
@@ -183,6 +192,8 @@ public class RobotContainer {
         
         this.superstructure = new Superstructure(swerve, intake, intakePivot, spindexer, feeder, turret, shooter, hood);
 
+        this.path = new Paths10();
+
         configureBindings();
         printAutons();
        
@@ -197,13 +208,13 @@ public class RobotContainer {
             swerve.setDefaultCommand(
                 // Drivetrain will execute this command periodically
                 swerve.applyRequest(() ->
-                    drive.withVelocityX(-driver.getLeftY() * MaxSpeed * Speedmodifier * shooter.getChassisShootingSpeed().get()) // Drive forward with negative Y (forward)
-                        .withVelocityY(-driver.getLeftX() * MaxSpeed * Speedmodifier * shooter.getChassisShootingSpeed().get()) // Drive left with negative X (left)
-                        .withRotationalRate(-driver.getRightX() * MaxAngularRate * shooter.getChassisShootingSpeed().get()) // Drive counterclockwise with negative X (left)
+                    drive.withVelocityX(-driver.getLeftY() * MaxSpeed * Speedmodifier ) // Drive forward with negative Y (forward)
+                        .withVelocityY(-driver.getLeftX() * MaxSpeed * Speedmodifier ) // Drive left with negative X (left)
+                        .withRotationalRate(-driver.getRightX() * MaxAngularRate ) // Drive counterclockwise with negative X (left)
                 )
             );
             new Trigger(driver.rightTrigger()).onTrue(Commands.runOnce(() -> {Speedmodifier = 1.0;}));
-            new Trigger(driver.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.4;}));
+            new Trigger(driver.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.5;}));
             //new Trigger(operator.rightTrigger()).onTrue(Commands.runOnce(() -> {Speedmodifier = 0.1;}));
             //new Trigger(operator.rightTrigger()).onFalse(Commands.runOnce(() -> {Speedmodifier = 0.5;}));
 
@@ -229,19 +240,6 @@ public class RobotContainer {
             //     new GoToPositionCommand(swerve, robotState, new Pose2d(new Translation2d(2, 4), 
             //     new Rotation2d(Units.degreesToRadians(-90))), 1));
 
-            driver.rightBumper().whileTrue(
-            // driver.R1().whileTrue(
-                new MoveToAngle(
-                    swerve, 
-                    robotState, 
-                    robotState.getPose2d(),
-                    () -> robotState.justinTurretAngle(),
-                    // () -> robotState.getRobotToAllianceHubDegrees(),
-                    // () -> robotState.getTurretToAllianceHubDegrees(),
-                    1
-                )
-            );
-
             // driver.leftBumper().whileTrue(
             //     new GoToPositionCommand(
             //         swerve, 
@@ -264,8 +262,9 @@ public class RobotContainer {
         Turret Controls
         */
         turret.setDefaultCommand(new TurretCameraPoseDefaultCommand(turret));
-            // turret.setDefaultCommand(turret.TurretToSetpointCommand(Degrees.of(turretAngle.get())));
-            // operator.b().whileTrue(turret.TurretRunWithVolts(Volts.of(-3))); //To the right
+            operator.rightTrigger().onTrue(Commands.runOnce(() -> robotState.currentTarget = Targets.Hub));
+            operator.leftTrigger().onTrue(Commands.runOnce(() -> robotState.currentTarget = Targets.Feed));
+            driver.rightBumper().whileTrue(turret.TurretRunWithVolts(Volts.of(0)));
             // operator.x().whileTrue(turret.TurretRunWithVolts(Volts.of(3))); //To the left
             // operator.a().whileTrue(turret.TurretToSetpointCommand(Degrees.of(0))); 
             // operator.povUp().whileTrue(turret.resetEncoder()); 
@@ -276,7 +275,7 @@ public class RobotContainer {
             new Trigger(() -> shooter.gainsChanged).whileTrue(shooter.updateGainsCommand());
             // driver.rightTrigger().whileTrue(shooter.runRPMCommand());
             operator.rightTrigger().whileTrue(shooter.treeMapRPMCommand());
-            operator.leftTrigger().whileTrue(shooter.runRPMCommand(3500));
+            operator.leftTrigger().whileTrue(shooter.treeMapRPMCommand());
             
             // operator.R2().whileTrue(shooter.treeMapRPMCommand());
             
@@ -297,6 +296,7 @@ public class RobotContainer {
             hood.setDefaultCommand(Commands.run(() -> hood.runToPosition(), hood));
             // hood.setDefaultCommand(hood.treeMapRPMCommand());
             operator.rightTrigger().whileTrue(hood.treeMapRPMCommand());
+			operator.leftTrigger().whileTrue(hood.treeMapRPMCommand());
             // operator.y().whileTrue(hood.runToPositionCommand(15));
 
             test.y().whileTrue(hood.runVolts(2));
@@ -401,15 +401,25 @@ public class RobotContainer {
         // a_chooser.addOption("Left_StopAtMiddle", 4);
         // a_chooser.addOption("Right_StopAtMiddle", 5);
         // a_chooser.addOption("Right_Center (dont run yet)", 6);
-        a_chooser.addOption("S_C_S_LEFT", 2);
-        a_chooser.addOption("S_C_S", 3);
-        a_chooser.addOption("Shoot8", 4);
-        a_chooser.addOption("OSMOSIS", 5);
-        a_chooser.addOption("MEIOSIS", 6);
-        a_chooser.addOption("Left_Middle2Cycle", 7);
-        a_chooser.addOption("Right_Middle2Cycle", 8);
-        a_chooser.addOption("Right_StopAtMiddle", 9);
-        a_chooser.addOption("Left_StopAtMiddle", 10);
+        // a_chooser.addOption("S_C_S_LEFT", 2);
+        // a_chooser.addOption("S_C_S", 3);
+        a_chooser.addOption("Shoot8", 2);
+        // a_chooser.addOption("OSMOSIS", 5);
+        // a_chooser.addOption("MEIOSIS", 6);
+        a_chooser.addOption("Left_Middle2Cycle", 3);
+        a_chooser.addOption("Right_Middle2Cycle", 4);
+        a_chooser.addOption("Right_StopAtMiddle", 5);
+        a_chooser.addOption("Left_StopAtMiddle", 6);
+        // a_chooser.addOption("TURNAROUNDLEFT", 11);
+        // a_chooser.addOption("DEPOT", 12);
+        a_chooser.addOption("Middle_depot", 7);
+        a_chooser.addOption("Center_2", 8);
+        a_chooser.addOption("Center_3", 9);
+        a_chooser.addOption("Left_2_Sweeps", 10);
+        a_chooser.addOption("Right_2_Sweeps", 11);
+
+
+
     }
     
 
@@ -424,33 +434,42 @@ public class RobotContainer {
 
             case 1:
                 return new doNOTHING(swerve);
-
-            // case 4:
-            //     return new Left_StopAtMiddle(superstructure);
-
-            // case 5:
-            //     return new Right_StopAtMiddle(superstructure);
                 
             // case 6:
             //     return new Right_Center(swerve, robotState, shooter, intakePivot, intake, feeder, spindexer, hood, superstructure);
+            // case 2:
+            //     return new S_C_S_LEFT(spindexer, feeder, shooter, intake, hood, swerve, intakePivot);
+            // case 3:
+            //     return new PathPlannerAuto("S_C_S");
             case 2:
-                return new S_C_S_LEFT(spindexer, feeder, shooter, intake, hood, swerve, intakePivot);
-            case 3:
-                return new PathPlannerAuto("S_C_S");
+                return new Shoot8(swerve, null, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure, path);
+            // case 5:
+            //     return new PathPlannerAuto("OSMOSIS");
+            // case 6:
+            //     return new PathPlannerAuto("MEIOSIS");
+             case 3:
+                return new Left_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
             case 4:
-                return new Shoot8(spindexer, feeder, shooter);
+                return new Right_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure, path);
             case 5:
-                return new PathPlannerAuto("OSMOSIS");
+                return new Right_StopAtMiddle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure, path);
             case 6:
-                return new PathPlannerAuto("MEIOSIS");
-             case 7:
-                return new Left_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
-            case 8:
-                return new Right_Middle2Cycle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
-            case 9:
-                return new Right_StopAtMiddle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
-            case 10:
                 return new Left_StopAtMiddle(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure);
+            // case 11:
+            //     return new TURNAROUNDLEFT(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+            // case 7:
+            //     return new DEPOT(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+            case 7:
+                return new Middle_Depot(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+            case 8:
+                return new Center_2(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+            case 9:
+                return new Center_3(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+            case 10:
+                return new Left_2_Sweeps(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+            case 11:
+                return new Right_2_Sweeps(swerve, robotState, shooter, turret, intakePivot, intake, feeder, spindexer, hood, superstructure,path);
+
             default:
                 return new doNOTHING(swerve);
 

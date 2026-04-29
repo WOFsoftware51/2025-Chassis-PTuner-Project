@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 8.0,
-        "y": 4.5
+        "y": 4.6
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.75,
-        "y": 4.5
+        "x": 7.739527733499605,
+        "y": 3.1227883704816874
       },
       "isLocked": false,
       "linkedName": "CENTER10"
@@ -50,7 +50,7 @@
       "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 0.9985987856141987,
+      "waypointRelativePos": 0.7034096216721158,
       "rotationDegrees": 130.0
     },
     {
@@ -58,21 +58,7 @@
       "rotationDegrees": 90.0
     }
   ],
-  "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.20274914089347063,
-      "maxWaypointRelativePos": 1.366552119129441,
-      "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 10.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -85,7 +71,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -0.39517682748579896
   },
   "reversed": false,
   "folder": null,

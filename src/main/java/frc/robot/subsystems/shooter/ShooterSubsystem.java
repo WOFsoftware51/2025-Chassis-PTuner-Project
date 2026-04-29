@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
+import frc.robot.RobotState.Targets;
 import frc.robot.util.LoggedTunableNumber;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -19,6 +20,9 @@ public class ShooterSubsystem extends SubsystemBase {
     ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
     private InterpolatingDoubleTreeMap treeMap = new InterpolatingDoubleTreeMap();
+    private InterpolatingDoubleTreeMap treeMapFeed = new InterpolatingDoubleTreeMap();
+
+    private double autonOffset = 0;
 
     LoggedTunableNumber shooterRPM = new LoggedTunableNumber("Shooter/speed", 3000);
     
@@ -34,7 +38,7 @@ public class ShooterSubsystem extends SubsystemBase {
     public boolean atRPM = false;
     public double chassisShootingSpeed = 1.0;
 
-    private double autonOffset = 0;
+    double currentTarget = 0.0;
 
     public ShooterSubsystem(ShooterIO io) {
         this.io = io;
@@ -43,10 +47,17 @@ public class ShooterSubsystem extends SubsystemBase {
         treeMap.put(Inches.of(87.4).in(Meters), 2350.0);
         treeMap.put(Inches.of(107.0).in(Meters), 2600.0);
         treeMap.put(Inches.of(127.0).in(Meters), 2850.0);
-        treeMap.put(Inches.of(147.6).in(Meters), 3000.0);
-        treeMap.put(Inches.of(166.6).in(Meters), 2900.0);
-        treeMap.put(Inches.of(184.0).in(Meters), 2900.0);
-        treeMap.put(Inches.of(208.0).in(Meters), 2925.0);
+        treeMap.put(Inches.of(147.6).in(Meters), 3100.0);
+        treeMap.put(Inches.of(166.6).in(Meters), 3100.0);
+        treeMap.put(Inches.of(184.0).in(Meters), 3150.0);
+        treeMap.put(Inches.of(208.0).in(Meters), 3150.0);
+
+
+        treeMapFeed.put(Meters.of(4.03).in(Meters), 2400.0);
+        treeMapFeed.put(Meters.of(5.70).in(Meters), 2900.0);
+        treeMapFeed.put(Meters.of(7.03).in(Meters), 3250.0);
+        treeMapFeed.put(Feet.of(27.0).in(Meters), 5000.0);
+
     }
 
     public Supplier<Double> getChassisShootingSpeed() {
@@ -82,19 +93,32 @@ public class ShooterSubsystem extends SubsystemBase {
             chassisShootingSpeed = 1.0;
         }
 
-        
-        Logger.processInputs("Shooter", inputs);
-
-        Logger.recordOutput("Shooter/chassisShootingSpeed", chassisShootingSpeed);
-
-        Logger.recordOutput("Shooter/TreeMap Angle", treeMap.get(Double.valueOf(RobotState.getInstance().getDistanceFromHubMeters())));
-
         if(DriverStation.isAutonomous()) {
-            autonOffset = 50;
+            autonOffset = 100;
         }
         else {
             autonOffset = 0;
         }
+
+
+        if(RobotState.getInstance().getCurrentTarget() == Targets.Hub) {
+            currentTarget = treeMap.get(Double.valueOf(RobotState.getInstance().getFutureTurretToHub()));
+
+        }
+        else if(RobotState.getInstance().getCurrentTarget() == Targets.Feed) {
+            currentTarget = treeMapFeed.get(Double.valueOf(RobotState.getInstance().getFutureTurretToHub()));
+        }
+
+        
+        Logger.processInputs("Shooter", inputs);
+
+        Logger.recordOutput("Shooter/atRPM", atRPM);
+        Logger.recordOutput("Shooter/autonOffset", autonOffset);
+
+        Logger.recordOutput("Shooter/chassisShootingSpeed", chassisShootingSpeed);
+
+        Logger.recordOutput("Shooter/TreeMap Angle", currentTarget);
+
     }
 
     public Command treeMapRPMCommand() {
@@ -102,14 +126,10 @@ public class ShooterSubsystem extends SubsystemBase {
             {
                 io.runVelocityRPM(
                     RPM.of(
-                        treeMap.get(
-                            Double.valueOf(
-                                RobotState.getInstance().getDistanceFromHubMeters()
-                            )
-                        )
+                        currentTarget
                         +
                         autonOffset
-                    )
+                    ) 
                 );
 
 

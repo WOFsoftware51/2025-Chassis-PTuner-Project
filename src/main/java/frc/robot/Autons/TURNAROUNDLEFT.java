@@ -5,11 +5,12 @@
 package frc.robot.Autons;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Paths10;
+import frc.robot.RobotState;
 import frc.robot.commands.factories.Superstructure;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.feeder.FeederSubsystem;
@@ -23,10 +24,10 @@ import frc.robot.subsystems.turret.TurretSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Shoot8 extends SequentialCommandGroup {
-  /** Creates a new test. */
-  public Shoot8(
-     Swerve swerve, 
+public class TURNAROUNDLEFT extends SequentialCommandGroup {
+  /** Creates a new Right_Middle2Cycle. */
+  public TURNAROUNDLEFT(
+      Swerve swerve, 
       RobotState robotState, 
       ShooterSubsystem shooter, 
       TurretSubsystem turret, 
@@ -35,28 +36,53 @@ public class Shoot8 extends SequentialCommandGroup {
       FeederSubsystem feeder, 
       SpindexerSubsystem spindexer, 
       HoodSubsystem hood, 
-      Superstructure superstructure, 
+      Superstructure superstructure,
       Paths10 path
-  ) {
-    // Add your commands in the addCommands() call, e.g.
-    // addCommands(new FooCommand(), new BarCommand());
-
-    addCommands(
-     Commands.parallel(
-        AutoBuilder.followPath(path.emptycenter),
-        shooter.runRPMCommand(3000).withTimeout(0.05)
+  ) 
+  {
+    
+    try {
+      addCommands(
+        AutoBuilder.resetOdom(path.LeftTrench_Center10.getStartingHolonomicPose().get()),
+        Commands.parallel(
+          AutoBuilder.followPath(path.emptyLeftTrench6),
+          shooter.runRPMCommand(3000).withTimeout(0.05)
         ),
-        Commands.race( //shoot
+        Commands.race(
+          AutoBuilder.followPath(path.LeftTrench_Center10), //go to center
+          Commands.sequence(
+            Commands.waitSeconds(0.5),
+            intakePivot.goDown(), 
+            intake.runVolts(10.8)
+          )
+        ),
+        // AutoBuilder.followPath(RightCenter_Pickup).raceWith(intake.runVolts(10.8)), //pickup and intake
+        AutoBuilder.followPath(path.COMEBACK10), //go to shoot position again
+        Commands.race( //shoot again
           superstructure.shoot(),
           Commands.run(() -> turret.turretCameraAimToHub()),
           Commands.sequence(
             Commands.waitSeconds(2.5), 
             intakePivot.bounce().alongWith(intake.runVolts(6))
           ),
-          Commands.waitSeconds(5)
+          Commands.waitSeconds(8)
+        ),
+      Commands.race(
+          AutoBuilder.followPath(path.LeftTrench_Center102), //go to center
+          Commands.sequence(
+            Commands.waitSeconds(1
+            ),
+            intakePivot.goDown(), 
+            intake.runVolts(10.8)
+          )
         )
-    );
+          
+      );
 
-    
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+    }  
+
   }
 }

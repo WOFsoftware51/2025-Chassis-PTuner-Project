@@ -60,7 +60,6 @@ public class VisionChassisSubsystem extends SubsystemBase{
 
         RobotState.getInstance().setChassisLimelightPose2d(visionMegaTag2);
         RobotState.getInstance().setLimelightChassisTimeStamp(inputs.mt2TimeStamp);
-
         Logger.processInputs("Vision/Chassis Limelight", inputs);
     }
 }

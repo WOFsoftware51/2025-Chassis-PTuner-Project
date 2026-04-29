@@ -88,14 +88,14 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     LoggedTunableNumber kV = new LoggedTunableNumber("Pose/DrivekV", 0.11);
     LoggedTunableNumber kA = new LoggedTunableNumber("Pose/DrivekA", 0.0);
 
-    LoggedTunableNumber n1 = new LoggedTunableNumber("PoseVisionMatrix/n1", 0.5);
-    LoggedTunableNumber n2 = new LoggedTunableNumber("PoseVisionMatrix/n2", 0.5);
+    LoggedTunableNumber n1 = new LoggedTunableNumber("PoseVisionMatrix/n1", 1.25);
+    LoggedTunableNumber n2 = new LoggedTunableNumber("PoseVisionMatrix/n2", 1.25);
     LoggedTunableNumber n3 = new LoggedTunableNumber("PoseVisionMatrix/gyro", Double.MAX_VALUE);
 
 
     private double visionTimeStampTurret;
     private double visionTimeStampChassis;
-    private Matrix<N3, N1> visionSTDMatrixTurret = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
+    private Matrix<N3, N1> visionSTDMatrixTurret = VecBuilder.fill(1.25, 1.25, Double.MAX_VALUE);
     private Matrix<N3, N1> visionSTDMatrixChassis = VecBuilder.fill(n1.get(), n2.get(), n3.get());
     // private Matrix<N3, N1> visionSTDMatrix = VecBuilder.fill();
 
@@ -178,7 +178,17 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         //     didItWork = true;
         // }
 
-        if(limelightChassis.inputs.tv) {
+        if(limelightTurret.inputs.tv) {
+            addVisionMeasurement(
+                robotState.getTurretLimelightMegaTag2(), 
+                // robotState.getTurretLimelightPose2d(), 
+                visionTimeStampTurret,
+                visionSTDMatrixTurret
+            );
+            didItWork = true;
+        }
+
+          if(limelightChassis.inputs.tv) {
             addVisionMeasurement(
                 robotState.getChassisLimelightPose2d(),
                 visionTimeStampChassis,
@@ -219,9 +229,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
             getState().Speeds.vyMetersPerSecond * 
             getState().Pose.getRotation().getCos();
 
-        fieldRelativeChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            fieldVx,
-            fieldVy,
+        // fieldRelativeChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+        //     fieldVx,
+        //     fieldVy,
+        fieldRelativeChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            getState().Speeds.vxMetersPerSecond,
+            getState().Speeds.vyMetersPerSecond,
             getState().Speeds.omegaRadiansPerSecond,
             getState().Pose.getRotation()
         );
@@ -253,6 +266,8 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
         testCameraPose = new Pose3d(robotState.getPose2d()).plus(new Transform3d(robotState.getRobotToLimelight().getTranslation(), robotState.getRobotToLimelight().getRotation()));
 
         Logger.recordOutput("Limelight Transform", testCameraPose);
+        Logger.recordOutput("RobotState/ChassisSpeeds/Stator Current", this.getModule(1).getDriveMotor().getStatorCurrent().getValueAsDouble());
+        Logger.recordOutput("RobotState/ChassisSpeeds/Supply Current", this.getModule(1).getDriveMotor().getSupplyCurrent().getValueAsDouble());
     }
 
     

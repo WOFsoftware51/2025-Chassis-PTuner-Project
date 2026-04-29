@@ -26,9 +26,6 @@ public class FeederIOHardware implements FeederIO {
         configs.CurrentLimits.StatorCurrentLimitEnable = true;
         configs.CurrentLimits.StatorCurrentLimit = 80;
     
-        configs.CurrentLimits.StatorCurrentLimitEnable = true;
-        configs.CurrentLimits.StatorCurrentLimit = 80;
-
         motor.getConfigurator().apply(configs);
     }
 
